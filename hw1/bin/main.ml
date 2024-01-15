@@ -37,6 +37,18 @@ let rec computed_periodic_point eq f p x =
   else computed_periodic_point eq f p (f x)
 
 (* 8 *)
+let rec whileseq_helper s p l = match l with
+| [] -> []
+| x::_ -> let next = s x in 
+  if (p next) then whileseq_helper s p (next::l)
+  else l
+
+(* let rec reverse_ll l = match l with
+| [] -> []
+| h::t ->  *)
+
+(* let rec whileseq s p x = if not (s x) then []
+else if  *)
 
 let computed_periodic_point_test0 =
   computed_periodic_point (=) (fun x -> x / 2) 0 (-1) = -1
