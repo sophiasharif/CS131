@@ -55,31 +55,13 @@ let whileseq s p x = List.rev (whileseq_helper s p [x])
 
 let get_outgoing_edges key l = List.map (fun (_, v) -> v) (List.filter (fun (k, _) -> k = key) l) *)
 
-let get_outgoing_edges key l = List.fold_right (fun (k,v) acc -> if k = key then v::acc else acc) l []
-
 type ('nonterminal, 'terminal) symbol =
   | N of 'nonterminal
   | T of 'terminal
 
-(* Function to convert nonterminals to strings *)
-type awksub_nonterminals =
-  | Expr | Lvalue | Incrop | Binop | Num
+let get_outgoing_edges key l = List.fold_right (fun (k,v) acc -> if k = key then v::acc else acc) l []
 
-  let string_of_nonterminal nt = match nt with
-  | Expr -> "Expr"
-  | Lvalue -> "Lvalue"
-  | Incrop -> "Incrop"
-  | Binop -> "Binop"
-  | Num -> "Num"
-
-(* Function to print the visited list *)
-let print_visited visited =
-  let visited_strings = List.map string_of_nonterminal visited in
-  let visited_concat = String.concat ", " visited_strings in
-  print_endline ("Visited: [" ^ visited_concat ^ "]")
-
-
-let rec is_blind_alley node grammar visited = print_visited visited; match node with
+let rec is_blind_alley node grammar visited = match node with
   | T _ -> false
   | N n ->  if List.mem n visited then true else 
             let new_visited = n::visited in
@@ -88,31 +70,13 @@ let rec is_blind_alley node grammar visited = print_visited visited; match node 
               List.exists (fun symbol -> is_blind_alley symbol grammar new_visited) next_expr (*if any symbol is a blind alley, then the expression is a blind alley, so return true*)
             ) outgoing_edges
 
-(* Test cases
-let test_get_outgoing_edges () =
-  (* Test data *)
-  let edges = [("a", 1); ("b", 2); ("a", 3); ("c", 4); ("a", 5)] in
-
-  (* 1. Basic functionality *)
-  assert (get_outgoing_edges "a" edges = [1; 3; 5]);
-
-  (* 2. No matching key *)
-  assert (get_outgoing_edges "d" edges = []);
-
-  (* 3. Empty list *)
-  assert (get_outgoing_edges "a" [] = []);
-
-  (* 4. Repeated keys *)
-  assert (get_outgoing_edges "b" edges = [2]);
-
-  (* If no assertion fails, all tests pass *)
-  print_endline "All tests passed."
-
-(* Run the test cases *)
-let () = test_get_outgoing_edges () *)
+let filter_blind_alleys g = List.filter (fun (lhs, _) -> not (is_blind_alley (N lhs) g [])) g
 
 
 (* Test Cases *)
+
+type awksub_nonterminals =
+  | Expr | Lvalue | Incrop | Binop | Num
 
 let test_is_blind_alley () =
   (* Test Grammars *)
@@ -129,32 +93,33 @@ let test_is_blind_alley () =
     Num, [T"1";]
   ] in
   let awksub_rules =
-    [Expr, [T"("; N Expr; T")"];
-     Expr, [N Num];
-     Expr, [N Expr; N Binop; N Expr];
-     Expr, [N Lvalue];
-     Expr, [N Incrop; N Lvalue];
-     Expr, [N Lvalue; N Incrop];
-     Lvalue, [T"$"; N Expr];
-     Incrop, [T"++"];
-     Incrop, [T"--"];
-     Binop, [T"+"];
-     Binop, [T"-"];
-     Num, [T"0"];
-     Num, [T"1"];
-     Num, [T"2"];
-     Num, [T"3"];
-     Num, [T"4"];
-     Num, [T"5"];
-     Num, [T"6"];
-     Num, [T"7"];
-     Num, [T"8"];
-     Num, [T"9"]] in 
+    [Expr, [N Num];
+       Expr, [N Lvalue];
+       Expr, [N Expr; N Lvalue];
+       Expr, [N Lvalue; N Expr];
+       Expr, [N Expr; N Binop; N Expr];
+       Lvalue, [N Lvalue; N Expr];
+       Lvalue, [N Expr; N Lvalue];
+       Lvalue, [N Incrop; N Lvalue];
+       Lvalue, [N Lvalue; N Incrop];
+       Incrop, [T"++"]; Incrop, [T"--"];
+       Binop, [T"+"]; Binop, [T"-"];
+       Num, [T"0"]; Num, [T"1"]; Num, [T"2"]; Num, [T"3"]; Num, [T"4"];
+       Num, [T"5"]; Num, [T"6"]; Num, [T"7"]; Num, [T"8"]; Num, [T"9"]] in
+  let res = [Expr, [N Num];
+  Expr, [N Expr; N Binop; N Expr];
+  Incrop, [T"++"]; Incrop, [T"--"];
+  Binop, [T "+"]; Binop, [T "-"];
+  Num, [T "0"]; Num, [T "1"]; Num, [T "2"]; Num, [T "3"]; Num, [T "4"];
+  Num, [T "5"]; Num, [T "6"]; Num, [T "7"]; Num, [T "8"]; Num, [T "9"]] in 
   (* Test 1: No cycle *)
   assert (is_blind_alley (N Expr) grammar1 [] = false);
   assert (is_blind_alley (N Expr) grammar2 [] = true);
   assert (is_blind_alley (N Expr) grammar3 [] = false);
   assert (is_blind_alley (N Expr) awksub_rules [] = false);
+  assert (is_blind_alley (N Lvalue) awksub_rules [] = true);
+  assert (is_blind_alley (N Binop) awksub_rules [] = false);
+  assert (filter_blind_alleys awksub_rules = res);
 
   (* If no assertion fails, all tests pass *)
   print_endline "All tests passed."
