@@ -61,15 +61,32 @@ type ('nonterminal, 'terminal) symbol =
   | N of 'nonterminal
   | T of 'terminal
 
+(* Function to convert nonterminals to strings *)
+type awksub_nonterminals =
+  | Expr | Lvalue | Incrop | Binop | Num
 
-let rec is_blind_alley node grammar visited = match node with
+  let string_of_nonterminal nt = match nt with
+  | Expr -> "Expr"
+  | Lvalue -> "Lvalue"
+  | Incrop -> "Incrop"
+  | Binop -> "Binop"
+  | Num -> "Num"
+
+(* Function to print the visited list *)
+let print_visited visited =
+  let visited_strings = List.map string_of_nonterminal visited in
+  let visited_concat = String.concat ", " visited_strings in
+  print_endline ("Visited: [" ^ visited_concat ^ "]")
+
+
+let rec is_blind_alley node grammar visited = print_visited visited; match node with
   | T _ -> false
-  | N n -> if List.mem n visited then true else 
+  | N n ->  if List.mem n visited then true else 
             let new_visited = n::visited in
             let outgoing_edges = get_outgoing_edges n grammar in
-            not (List.exists (fun next_expr -> 
-              List.exists (fun symbol -> is_blind_alley symbol grammar new_visited) next_expr
-            ) outgoing_edges)
+            List.for_all (fun next_expr -> (* if all expressions are blind alleys, return true*)
+              List.exists (fun symbol -> is_blind_alley symbol grammar new_visited) next_expr (*if any symbol is a blind alley, then the expression is a blind alley, so return true*)
+            ) outgoing_edges
 
 (* Test cases
 let test_get_outgoing_edges () =
@@ -97,9 +114,6 @@ let () = test_get_outgoing_edges () *)
 
 (* Test Cases *)
 
-type awksub_nonterminals =
-| Expr | Num
-
 let test_is_blind_alley () =
   (* Test Grammars *)
   let grammar1 = [
@@ -109,9 +123,38 @@ let test_is_blind_alley () =
   let grammar2 = [
     Expr, [N Expr];
   ] in
+  let grammar3 = [
+    Expr, [T"("; N Num; T")"];
+    Num, [T"0"; N Num];
+    Num, [T"1";]
+  ] in
+  let awksub_rules =
+    [Expr, [T"("; N Expr; T")"];
+     Expr, [N Num];
+     Expr, [N Expr; N Binop; N Expr];
+     Expr, [N Lvalue];
+     Expr, [N Incrop; N Lvalue];
+     Expr, [N Lvalue; N Incrop];
+     Lvalue, [T"$"; N Expr];
+     Incrop, [T"++"];
+     Incrop, [T"--"];
+     Binop, [T"+"];
+     Binop, [T"-"];
+     Num, [T"0"];
+     Num, [T"1"];
+     Num, [T"2"];
+     Num, [T"3"];
+     Num, [T"4"];
+     Num, [T"5"];
+     Num, [T"6"];
+     Num, [T"7"];
+     Num, [T"8"];
+     Num, [T"9"]] in 
   (* Test 1: No cycle *)
   assert (is_blind_alley (N Expr) grammar1 [] = false);
   assert (is_blind_alley (N Expr) grammar2 [] = true);
+  assert (is_blind_alley (N Expr) grammar3 [] = false);
+  assert (is_blind_alley (N Expr) awksub_rules [] = false);
 
   (* If no assertion fails, all tests pass *)
   print_endline "All tests passed."
