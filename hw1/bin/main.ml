@@ -47,92 +47,22 @@ let whileseq s p x = List.rev (whileseq_helper s p [x])
 
 (* 9 *)
 
-(* let rec get_outgoing_edges key l = match l with
-| [] -> []
-| (k, v)::t -> if key = k 
-    then v :: get_outgoing_edges key t
-    else get_outgoing_edges key t
-
-let get_outgoing_edges key l = List.map (fun (_, v) -> v) (List.filter (fun (k, _) -> k = key) l) *)
-
 type ('nonterminal, 'terminal) symbol =
   | N of 'nonterminal
   | T of 'terminal
 
 let get_outgoing_edges key l = List.fold_right (fun (k,v) acc -> if k = key then v::acc else acc) l []
 
-let rec is_blind_alley node grammar visited = match node with
+let rec is_blind_alley node rules visited = match node with
   | T _ -> false
   | N n ->  if List.mem n visited then true else 
             let new_visited = n::visited in
-            let outgoing_edges = get_outgoing_edges n grammar in
+            let outgoing_edges = get_outgoing_edges n rules in
             List.for_all (fun next_expr -> (* if all expressions are blind alleys, return true*)
-              List.exists (fun symbol -> is_blind_alley symbol grammar new_visited) next_expr (*if any symbol is a blind alley, then the expression is a blind alley, so return true*)
+              List.exists (fun symbol -> is_blind_alley symbol rules new_visited) next_expr (*if any symbol is a blind alley, then the expression is a blind alley, so return true*)
             ) outgoing_edges
 
-let filter_blind_alleys g = List.filter (fun (lhs, _) -> not (is_blind_alley (N lhs) g [])) g
-
-
-(* Test Cases *)
-
-type awksub_nonterminals =
-  | Expr | Lvalue | Incrop | Binop | Num
-
-let test_is_blind_alley () =
-  (* Test Grammars *)
-  let grammar1 = [
-    Expr, [T"("; N Num; T")"];
-    Num, [T"0"];
-  ] in
-  let grammar2 = [
-    Expr, [N Expr];
-  ] in
-  let grammar3 = [
-    Expr, [T"("; N Num; T")"];
-    Num, [T"0"; N Num];
-    Num, [T"1";]
-  ] in
-  let awksub_rules =
-    [Expr, [N Num];
-       Expr, [N Lvalue];
-       Expr, [N Expr; N Lvalue];
-       Expr, [N Lvalue; N Expr];
-       Expr, [N Expr; N Binop; N Expr];
-       Lvalue, [N Lvalue; N Expr];
-       Lvalue, [N Expr; N Lvalue];
-       Lvalue, [N Incrop; N Lvalue];
-       Lvalue, [N Lvalue; N Incrop];
-       Incrop, [T"++"]; Incrop, [T"--"];
-       Binop, [T"+"]; Binop, [T"-"];
-       Num, [T"0"]; Num, [T"1"]; Num, [T"2"]; Num, [T"3"]; Num, [T"4"];
-       Num, [T"5"]; Num, [T"6"]; Num, [T"7"]; Num, [T"8"]; Num, [T"9"]] in
-  let res = [Expr, [N Num];
-  Expr, [N Expr; N Binop; N Expr];
-  Incrop, [T"++"]; Incrop, [T"--"];
-  Binop, [T "+"]; Binop, [T "-"];
-  Num, [T "0"]; Num, [T "1"]; Num, [T "2"]; Num, [T "3"]; Num, [T "4"];
-  Num, [T "5"]; Num, [T "6"]; Num, [T "7"]; Num, [T "8"]; Num, [T "9"]] in 
-  (* Test 1: No cycle *)
-  assert (is_blind_alley (N Expr) grammar1 [] = false);
-  assert (is_blind_alley (N Expr) grammar2 [] = true);
-  assert (is_blind_alley (N Expr) grammar3 [] = false);
-  assert (is_blind_alley (N Expr) awksub_rules [] = false);
-  assert (is_blind_alley (N Lvalue) awksub_rules [] = true);
-  assert (is_blind_alley (N Binop) awksub_rules [] = false);
-  assert (filter_blind_alleys awksub_rules = res);
-
-  (* If no assertion fails, all tests pass *)
-  print_endline "All tests passed."
-
-(* Run the test cases *)
-let () = test_is_blind_alley ()
-
-
-
-
-
-
-
+let filter_blind_alleys (root, rules) = (root, List.filter (fun (_, rhs) -> List.for_all (fun symbol -> not (is_blind_alley symbol rules [])) rhs) rules)
 
 
 (* TESTS *)
@@ -152,3 +82,18 @@ let () = print_endline (string_of_bool computed_fixed_point_test0)
 let set_all_union_test0 =
   equal_sets (set_all_union []) []
 let () = print_endline (string_of_bool set_all_union_test0)
+
+(* 10 *)
+
+type awksub_nonterminals = Expr | Num
+let grammar1 = [ Expr, [T"("; N Num; T")"]; Num, [T"0"];]
+let grammar2 = [ Expr, [N Expr];]
+let grammar3 = [ Expr, [T"("; N Num; T")"]; Num, [T"0"; N Num]; Num, [T"1";] ]
+let my_filter_blind_alleys_test0 = filter_blind_alleys (Expr, grammar1) = (Expr, grammar1)
+let my_filter_blind_alleys_test1 = filter_blind_alleys (Expr, grammar2) = (Expr, [])
+let my_filter_blind_alleys_test2 = filter_blind_alleys (Expr, grammar3) = (Expr, grammar3);;
+
+assert (my_filter_blind_alleys_test0 && my_filter_blind_alleys_test1 && my_filter_blind_alleys_test2);;
+
+(* If no assertion fails, all tests pass *)
+print_endline "All tests passed.";;
