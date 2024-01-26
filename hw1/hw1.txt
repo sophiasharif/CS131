@@ -1,0 +1,19 @@
+HW1 Report
+
+1. Implemented a recursive function subset a b which iteratively checks if each element of list a is contained in list b. This method ensures that a is a subset of b.
+
+2. Initially considered developing equal_sets a b from scratch but realized that two sets are equal if each is a subset of the other. Thus, I reused the subset function for a more efficient implementation.
+
+3. Developed a recursive function that concatenates two lists a and b. Given that our set representation allows duplicates, this approach directly achieves the union of two sets.
+
+4. Used recursion to iteratively apply set_union, creating a union of multiple sets represented by the list of lists a.
+
+5. Initially hypothesized that the issue might be computational limitations (e.g., memory constraints. for defining a recursive type. However, realized that the core issue lies in OCaml's type system, which does not support defining a set as a member of itself. Concluded that implementing a function to handle this paradox is not feasible in OCaml.
+
+6. Created computed_fixed_point eq f x with an auxiliary function is_computed_periodic_point to iteratively apply f to x until a fixed point is reached.
+
+7. Implemented a function that repeatedly applies f and checks for periodicity using the eq predicate, halting when it identifies a periodic point or when no such point can be found.
+
+8. Built the list in reverse using a recursive helper function and then reversed it using the List module. This approach effectively constructs the longest list satisfying the predicate p.
+
+9. Developed a function to recursively explore all paths from a tree node, returning true if all paths are blind alleys. Experimented with different methods for detecting blind alleys, like maintaining a path list and considering path lengths. Utilized OCaml's list functions to efficiently extract outgoing nodes from a node, refining the implementation across three iterations for optimal performance.
