@@ -39,7 +39,7 @@ let awksub_rules =
     Num, [T"9"]]
  
 let awksub_grammar = Expr, awksub_rules
- 
+
  
 let awkish_grammar =
   (Expr,
@@ -67,8 +67,8 @@ let awkish_grammar =
 
 (* 1 - convert hw1 style grammar to hw2 style grammar *)
 let convert_grammar (root, rules) = 
-  let get_rhs symbol = List.fold_right (fun (k,v) acc -> if k = symbol then v::acc else acc) rules [] in 
-    (root, get_rhs)
+  let get_rhs symbol = List.fold_right (fun (k,v) acc -> if k = symbol then v::acc else acc) rules [] 
+    in (root, get_rhs)
 
 (* 2 - parse tree leaves left to right *)
 
@@ -76,17 +76,32 @@ type ('nonterminal, 'terminal) parse_tree =
   | Node of 'nonterminal * ('nonterminal, 'terminal) parse_tree list
   | Leaf of 'terminal
 
-(* let rec parse_tree_leaves tree acc = match tree with 
+let parse_tree_leaves tree = let rec helper acc = function
   | Leaf l -> l::acc
-  | Node (_, subtrees) -> List.fold_left (fun a subtree -> parse_tree_leaves subtree a) acc subtrees  *)
+  | Node (_, subtrees) -> List.fold_left helper acc subtrees  (* call helper (acc, tree) on all items in the subtree list and add them to accumulator *)
+    in List.rev (helper [] tree)
 
-let parse_tree_leaves tree = let rec helper acc = (function
-  | Leaf l -> l::acc
-  | Node (_, subtrees) -> List.fold_left helper acc subtrees) 
-  in List.rev (helper [] tree)
+(* 3 -- matcher generator *)
 
-let test5 =
-  (parse_tree_leaves (Node ("+", [Leaf 3; Node ("*", [Leaf 4; Leaf 5])]))
-    = [3; 4; 5])
+let match_term t frag = match frag with
+    | head::tail when head = t -> Some tail
+    | _ -> None
+(* 
+let (>>>) f v = match v with
+| None -> None
+| Some x -> f x *)
 
-let tree = parse_tree_leaves (Node ("+", [Leaf 1; Node ("*", [Leaf 2; Node ("/", [Leaf 3; Leaf 4; Leaf 5]); Leaf 6])]))
+let match_or matcher1 matcher2 frag = let try_first = matcher1 frag 
+  in match try_first with 
+    | None -> matcher2 frag
+    | _ -> try_first
+
+let match_and matcher1 matcher2 frag = let try_first = matcher1 frag
+  in match try_first with
+    | None -> None
+    | Some x -> matcher2 x
+
+let a = match_term "a"
+let b = match_term "b"
+let a_or_b = match_or a b
+let a_and_b = match_and a b
