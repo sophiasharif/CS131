@@ -96,8 +96,25 @@ let match_and matcher1 matcher2 frag = let try_first = matcher1 frag
   in match try_first with
     | None -> None
     | Some x -> matcher2 x
+  
+let rec match_all = function
+| h::t -> match_and (match_term h) (match_all t)
+| [] -> (fun frag -> Some frag)
+
+let rec match_any = function
+| h::t -> match_or (match_term h) (match_any t)
+| [] -> (fun _ -> None)
+
+(* let r, f = awkish_grammar
+
+let rec match_all2 = function
+| (T h)::t -> match_and (match_term h) (match_all2 t)
+| (N h)::t -> match_and (match_any (f h)) (match_all2 t)
+| [] -> (fun frag -> Some frag) *)
+
 
 let a = match_term "a"
 let b = match_term "b"
 let a_or_b = match_or a b
 let a_and_b = match_and a b
+let test = match_all ["a"; "b"; "c"]

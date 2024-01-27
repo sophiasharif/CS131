@@ -86,10 +86,6 @@ let parse_tree_leaves tree = let rec helper acc = function
 let match_term t frag = match frag with
     | head::tail when head = t -> Some tail
     | _ -> None
-(* 
-let (>>>) f v = match v with
-| None -> None
-| Some x -> f x *)
 
 let match_or matcher1 matcher2 frag = let try_first = matcher1 frag 
   in match try_first with 
@@ -100,8 +96,18 @@ let match_and matcher1 matcher2 frag = let try_first = matcher1 frag
   in match try_first with
     | None -> None
     | Some x -> matcher2 x
+  
+let rec match_all = function
+| h::t -> match_and (match_term h) (match_all t)
+| [] -> (fun frag -> Some frag)
+
+let rec match_any = function
+| h::t -> match_or (match_term h) (match_any t)
+| [] -> (fun _ -> None)
+
 
 let a = match_term "a"
 let b = match_term "b"
 let a_or_b = match_or a b
 let a_and_b = match_and a b
+let test = match_all ["a"; "b"; "c"]
