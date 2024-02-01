@@ -127,23 +127,75 @@ and match_any = function
   | [] -> (fun _ -> None) 
 in match_any (f nt) *)
 
-let match_nt frag f nt = 
+let print_suffix suffix_option =
+  match suffix_option with
+  | Some suffix ->
+    let suffix_string = String.concat "; " suffix in
+    Printf.printf "Current suffix: Some [%s]\n" suffix_string
+  | None ->
+    Printf.printf "Current suffix: None\n";;
+  
+let print_frag frag =
+    let suffix_string = String.concat "; " frag in
+    Printf.printf "Current frag: Some [%s]\n" suffix_string
+
+let accept_all string = Some string
+
+let accept_empty_suffix = function
+  | _::_ -> None
+  | x -> Some x
+
+let r, f = awkish_grammar;;
+
+(* let match_nt frag f nt = 
 let rec match_all frag sym_list = match sym_list with
   | (T h)::t -> let remaining_frag = match_term h frag in 
     (match remaining_frag with
       | None -> None
       | Some x -> match_all x t)
-  | (N h)::t -> let remaining_frag = match_any frag (f h) in
+  | (N h)::t -> let remaining_frag = match_any frag (f h) false in
     (match remaining_frag with
     | None -> None
     | Some x -> match_all x t)
   | [] -> Some frag 
-and match_any frag rule_list = match rule_list with
+and match_any frag rule_list is_top_level = match rule_list with
   | h::t -> let remaining_frag = match_all frag h in
     (match remaining_frag with
-      | None -> match_any frag t
-      | _ -> remaining_frag)
+      | None -> match_any frag t is_top_level
+      | _ ->  print_frag frag; if is_top_level then print_endline("is this the place?"); remaining_frag)
   | [] -> None
-in match_any frag (f nt)
+in match_any frag (f nt) true *)
 
-let expr_matcher = match_nt ["1"; "+"; "1"] test Expr
+let match_nt frag f nt accept = 
+  let rec match_all frag sym_list = match sym_list with
+    | (T h)::t -> let remaining_frag = match_term h frag in 
+      (match remaining_frag with
+        | None -> None
+        | Some x -> match_all x t)
+    | (N h)::t -> let remaining_frag = match_any frag (f h) false in
+      (match remaining_frag with
+      | None -> None
+      | Some x -> match_all x t)
+    | [] -> Some frag 
+  and match_any frag rule_list is_top_level = match rule_list with
+    | h::t -> let remaining_frag = match_all frag h in
+      (match remaining_frag with
+        | None -> match_any frag t is_top_level
+        | Some x ->  print_frag frag; if is_top_level then print_endline("is this the place?"); if is_top_level then (accept x) else remaining_frag)
+    | [] -> None
+  in match_any frag (f nt) true
+
+
+(* Updated make_matcher to work with the adjusted match_nt *)
+let make_matcher gram accept frag = 
+  let root, gramf = convert_grammar gram in
+  match_nt frag gramf root accept
+
+
+(* let make_matcher gram accept frag = let root, gramf = convert_grammar gram in
+  let suffix = match_nt frag gramf root in 
+    match suffix with
+      | None -> None
+      | Some x -> accept x *)
+
+let x = make_matcher awksub_grammar accept_empty_suffix ["1"; "+"; "1"]
