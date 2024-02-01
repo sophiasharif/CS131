@@ -20,6 +20,4 @@
 #        }
 #  ; instrument_with = []
 #  }
-$ /Users/sophiasharif/.opam/my-switch/bin/ocamlc.opt -config > /var/folders/4s/0shkycv9613d_rw6h0lfrjqw0000gn/T/dune_e3f7c8_output
-$ (cd _build/default && /Users/sophiasharif/.opam/my-switch/bin/ocamlopt.opt -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -w -32-37 -g -I bin/.main.eobjs/byte -I bin/.main.eobjs/native -I lib/.hw2.objs/byte -I lib/.hw2.objs/native -intf-suffix .ml -no-alias-deps -opaque -o bin/.main.eobjs/native/dune__exe__Main.cmx -c -impl bin/main.ml)
-$ (cd _build/default && /Users/sophiasharif/.opam/my-switch/bin/ocamlopt.opt -w @1..3@5..28@30..39@43@46..47@49..57@61..62@67@69-40 -strict-sequence -strict-formats -short-paths -keep-locs -w -32-37 -g -o bin/main.exe lib/hw2.cmxa bin/.main.eobjs/native/dune__exe__Main.cmx)
+$ /Users/sophiasharif/.opam/my-switch/bin/ocamlc.opt -config > /var/folders/4s/0shkycv9613d_rw6h0lfrjqw0000gn/T/dune_0a41f0_output

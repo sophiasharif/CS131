@@ -96,18 +96,35 @@ let match_and matcher1 matcher2 frag = let try_first = matcher1 frag
   in match try_first with
     | None -> None
     | Some x -> matcher2 x
-  
+
+let test = function
+     | Expr ->
+         [[N Num; N Binop; N Num];
+          [N Term]]
+     | Term ->
+	 [[T"("; N Num; T")"]]
+     | Lvalue ->
+	 [[T"$"; N Num]]
+     | Incrop ->
+	 [[T"++"];
+	  [T"--"]]
+     | Binop ->
+	 [[T"+"];
+	  [T"-"]]
+     | Num ->
+	 [[T"0"]; [T"1"]; [T"2"]; [T"3"]; [T"4"];
+	  [T"5"]; [T"6"]; [T"7"]; [T"8"]; [T"9"]]
+
+(* let r, test = awkish_grammar *)
+
+let rec match_nt f nt = 
 let rec match_all = function
-| h::t -> match_and (match_term h) (match_all t)
-| [] -> (fun frag -> Some frag)
+  | (T h)::t -> match_and (match_term h) (match_all t)
+  | (N h)::t -> match_and (match_nt f h) (match_all t)
+  | [] -> (fun frag -> Some frag)
+and match_any = function
+  | h::t -> match_or (match_all h) (match_any t)
+  | [] -> (fun _ -> None) 
+in match_any (f nt)
 
-let rec match_any = function
-| h::t -> match_or (match_term h) (match_any t)
-| [] -> (fun _ -> None)
-
-
-let a = match_term "a"
-let b = match_term "b"
-let a_or_b = match_or a b
-let a_and_b = match_and a b
-let test = match_all ["a"; "b"; "c"]
+let expr_matcher = match_nt test Expr
