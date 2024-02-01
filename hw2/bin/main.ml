@@ -117,7 +117,7 @@ let test = function
 
 (* let r, test = awkish_grammar *)
 
-let rec match_nt f nt = 
+(* let rec match_nt f nt = 
 let rec match_all = function
   | (T h)::t -> match_and (match_term h) (match_all t)
   | (N h)::t -> match_and (match_nt f h) (match_all t)
@@ -125,6 +125,25 @@ let rec match_all = function
 and match_any = function
   | h::t -> match_or (match_all h) (match_any t)
   | [] -> (fun _ -> None) 
-in match_any (f nt)
+in match_any (f nt) *)
 
-let expr_matcher = match_nt test Expr
+let match_nt frag f nt = 
+let rec match_all frag sym_list = match sym_list with
+  | (T h)::t -> let remaining_frag = match_term h frag in 
+    (match remaining_frag with
+      | None -> None
+      | Some x -> match_all x t)
+  | (N h)::t -> let remaining_frag = match_any frag (f h) in
+    (match remaining_frag with
+    | None -> None
+    | Some x -> match_all x t)
+  | [] -> Some frag 
+and match_any frag rule_list = match rule_list with
+  | h::t -> let remaining_frag = match_all frag h in
+    (match remaining_frag with
+      | None -> match_any frag t
+      | _ -> remaining_frag)
+  | [] -> None
+in match_any frag (f nt)
+
+let expr_matcher = match_nt ["1"; "+"; "1"] test Expr
