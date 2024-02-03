@@ -34,6 +34,8 @@ let awkish_grammar =
 	 [[T"0"]; [T"1"]; [T"2"]; [T"3"]; [T"4"];
 	  [T"5"]; [T"6"]; [T"7"]; [T"8"]; [T"9"]])
 
+let root, f = awkish_grammar
+
 let test0 =
   ((make_matcher awkish_grammar accept_all ["ouch"]) = None)
 
@@ -86,3 +88,37 @@ let test7 =
   match make_parser awkish_grammar small_awk_frag with
     | Some tree -> parse_tree_leaves tree = small_awk_frag
     | _ -> false
+  
+  let nt_to_string = function
+      | Expr -> "Expr"
+      | Term -> "Term"
+      | Lvalue -> "Lvalue"
+      | Incrop -> "Incrop"
+      | Binop -> "Binop"
+      | Num -> "Num"
+  
+  (* Function to print a symbol *)
+  let print_symbol = function
+    | N nt -> "N " ^ nt_to_string nt
+    | T t -> "T " ^ t  (* Assuming 'terminal is string for simplicity *)
+  
+  (* Function to print a list of symbols *)
+  let print_symbol_list symbol_list =
+    let symbols_as_strings = List.map print_symbol symbol_list in
+    let list = String.concat "; " symbols_as_strings in
+    ("[" ^ list ^ "]")
+  
+  (* Function to print a list of symbol lists *)
+  let print_symbol_list_list symbol_list_list =
+    let lists_as_strings = List.map print_symbol_list symbol_list_list in
+    "[" ^ (String.concat "; " lists_as_strings) ^ "]"
+  
+  (* Example usage *)
+
+(* 
+let () =
+  match trace_option with
+  | Some trace -> print_endline (print_symbol_list_list trace)
+  | None -> print_endline "No trace found" *)
+
+

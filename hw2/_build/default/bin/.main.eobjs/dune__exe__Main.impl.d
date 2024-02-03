@@ -1,1 +1,1 @@
-bin/main.ml: List Printf String
+bin/main.ml: List

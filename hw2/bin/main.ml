@@ -37,5 +37,39 @@ let make_matcher (root, nt_to_rules) =
   in let mm acceptor fragment = try_rule [N root] acceptor fragment 
     in mm 
 
+(* 4 -- parser *)
 
-let make_parser gram frag = gram; frag; None;
+(* step 1: adapt code from #3 to create a trace of how the expression was matched *)
+let get_trace root nt_to_rules frag = 
+  let rec get_rule rule_list acceptor frag = match rule_list with 
+    | [] -> None                 
+    | rule::remaining_rules -> (match (try_rule rule acceptor frag) with 
+        | None -> get_rule remaining_rules acceptor frag 
+        | Some remaining_frag -> Some (rule::remaining_frag) )  (* only difference: if rule successfully matched, add it to trace *)
+  and try_rule rule acceptor frag = match rule, frag with
+    | [], _ -> acceptor frag      
+    | _, [] -> None               
+    | (T term)::remaining_rule, first::remaining_frag ->  
+        if term = first then (try_rule remaining_rule acceptor remaining_frag) else None
+    | (N nt)::tl, _ ->            
+        get_rule (nt_to_rules nt) (try_rule tl acceptor) frag 
+  in get_rule [[N root]] (function [] -> Some [] | _ -> None) frag  (* acceptor is accept_empty *)
+
+(*  step 2: parse the trace *)
+let create_tree trace  = 
+  let rec parse_rule rule trace = match rule with (* returns (tree, rest of trace) *)
+    | [] -> ([], trace)     (* return empty tree and trace if done with rule*)
+    | sym::remaining_rule -> (match sym with 
+        | T term -> (match parse_rule remaining_rule trace with (* if terminal, append leaf to list*)
+            | (tree, remaining_trace) -> ((Leaf term)::tree, remaining_trace)) 
+        | N nterm -> ( match parse_nt trace with (* if nonterminal, create a tree and then append *)
+            | (l1, tr1) -> (match parse_rule remaining_rule tr1 with
+                | (tree, remaining_trace) -> ((Node (nterm, l1))::tree, remaining_trace))))        
+  and parse_nt = function [] -> ([], []) | hd::tl -> parse_rule hd tl 
+  in match trace with 
+    | None | Some [] -> None
+    | Some (rule::trace) -> let tree, _ = parse_rule rule trace in 
+        if tree = [] then None else Some(List.hd tree) (* throw away empty trace and get node out of list*)
+
+(* step 3: package into a function that can accept a fragment *)
+let make_parser (root, nt_to_rules) = (fun frag -> create_tree (get_trace root nt_to_rules frag))
