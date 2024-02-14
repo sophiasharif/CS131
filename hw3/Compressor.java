@@ -5,6 +5,14 @@ public class Compressor {
 
     CRC32 crc32 = new CRC32();
     int bytesRead = 0;
+    CompressionThread[] threads;
+
+    Compressor(int num_threads) {
+        threads = new CompressionThread[num_threads];
+        for (int i=0; i < threads.length; i++) {
+            threads[i] = new CompressionThread();
+        }
+    }
 
     public void init() {
 
@@ -28,11 +36,10 @@ public class Compressor {
             crc32.update(byteBuffer);
 
             // create thread
-            CompressionThread t1 = new CompressionThread(byteBuffer);
-            Thread thread = new Thread(t1);
-            thread.start();
-            thread.join();
-            t1.write();
+            threads[0].setData(byteBuffer);
+            threads[0].start();
+            threads[0].join();
+            threads[0].write();
 
 
         } catch (IOException | InterruptedException e) {

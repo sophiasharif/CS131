@@ -1,11 +1,11 @@
 import java.util.zip.Deflater;
 
-public class CompressionThread implements Runnable{
+public class CompressionThread extends Thread {
     private byte[] data; // Declare the data variable
     public int compressedSize;
     public byte[] output;
     
-    CompressionThread(byte[] data) {
+    public void setData(byte[] data) {
         this.data = data;
     }
     
