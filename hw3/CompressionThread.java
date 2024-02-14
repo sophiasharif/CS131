@@ -13,6 +13,10 @@ public class CompressionThread implements Runnable{
         this.compress();
     }
 
+    public void write() {
+        System.out.write(output, 0, compressedSize);
+    }
+
     private void compress() {
         Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
         deflater.setInput(data);
