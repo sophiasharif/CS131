@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.util.zip.CRC32;
+import java.util.zip.Deflater;
 
 public class Compressor {
 
@@ -30,7 +31,10 @@ public class Compressor {
             byte[] byteBuffer = {0}; // initialize to non-empty array so loop starts
             
             while (byteBuffer.length != 0) {
-                for (int i=0; i < threads.length; i++) {
+                System.err.println("iteration!");
+                int i;
+
+                for (i=0; i < threads.length; i++) {
 
 
                     // NEXT STEPS:
@@ -44,22 +48,33 @@ public class Compressor {
                         break; 
                     }
 
-                    threads[i] = new CompressionThread();
+                    // CREATE THREAD
+                    // threads[i] = new CompressionThread();
 
                     // update metadata
                     bytesRead += byteBuffer.length;
+                    System.err.println("Bytes read: " + bytesRead);
                     crc32.update(byteBuffer);
 
-                    // create thread
-                    threads[i].setData(byteBuffer);
-                    threads[i].start();
-                    threads[i].join();
-                    threads[i].write();
+                    // no thread test
+                    Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
+                    deflater.setInput(byteBuffer);
+                    deflater.finish();
+                    byte[] output = new byte[byteBuffer.length+100];
+                    int compressedSize = deflater.deflate(output);
+                    deflater.end();
+                    System.out.write(output, 0, compressedSize);
+
+                    // COMPRESS DATA
+                    // threads[i].setData(byteBuffer);
+                    // threads[i].start();
+                    // threads[i].join();
+                    // threads[i].write();
                 }
 
             }
 
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             System.out.println("Error: " + e.getMessage());
         }
      
