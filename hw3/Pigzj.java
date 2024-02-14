@@ -1,11 +1,10 @@
 import java.io.IOException;
 import java.util.zip.CRC32;
-import java.util.zip.Deflater;
-import java.nio.ByteBuffer;
 
 
 public class Pigzj {
     public static void main(String[] args) {
+        
         try {
 
             // read all bytes from stdin
@@ -15,13 +14,13 @@ public class Pigzj {
             CRC32 crc32 = new CRC32();
             crc32.update(byteBuffer);
 
-            // compress the input data
-            Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
-            deflater.setInput(byteBuffer);
-            deflater.finish();
-            byte[] output = new byte[byteBuffer.length];
-            int compressedSize = deflater.deflate(output);
-            deflater.end();
+            // create threads
+            CompressionThread t1 = new CompressionThread(byteBuffer);
+            Thread thread = new Thread(t1);
+            thread.start();
+
+            // wait for compression data
+            thread.join();
             
             // prepare crc32 and size of compressed data for gzip trailer
             byte[] gzipHeader = {31, -117, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, -1};
@@ -31,12 +30,12 @@ public class Pigzj {
             
             // write header, compressed data, and trailer to stdout
             System.out.write(gzipHeader);
-            System.out.write(output, 0, compressedSize);
+            System.out.write(t1.output, 0, t1.compressedSize);
             System.out.write(gzipTrailer);
 
 
-        } catch (IOException e) {
-            System.out.println("IO Error in reading bytes: " + e.getMessage());
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Error: " + e.getMessage());
         }
         
     }
