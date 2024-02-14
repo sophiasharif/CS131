@@ -6,9 +6,9 @@ public class Pigzj {
     public static void main(String[] args) {
         
         Compressor compressor = new Compressor(1);
-        compressor.init();
+        compressor.writeHeader();
         compressor.compress();
-        compressor.finish();
+        compressor.writeTrailer();
         
     }
 

@@ -8,13 +8,11 @@ public class Compressor {
     CompressionThread[] threads;
 
     Compressor(int num_threads) {
+        // initialize threads
         threads = new CompressionThread[num_threads];
-        for (int i=0; i < threads.length; i++) {
-            threads[i] = new CompressionThread();
-        }
     }
 
-    public void init() {
+    public void writeHeader() {
 
         // write header
         byte[] gzipHeader = {31, -117, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, -1};
@@ -29,18 +27,37 @@ public class Compressor {
         
         try {
             // read all bytes from stdin
-            byte[] byteBuffer = System.in.readNBytes(128 * 1024);
-            bytesRead += byteBuffer.length;
+            byte[] byteBuffer = {0}; // initialize to non-empty array so loop starts
+            
+            while (byteBuffer.length != 0) {
+                for (int i=0; i < threads.length; i++) {
 
-            // calculate crc32 of input data
-            crc32.update(byteBuffer);
 
-            // create thread
-            threads[0].setData(byteBuffer);
-            threads[0].start();
-            threads[0].join();
-            threads[0].write();
+                    // NEXT STEPS:
+                    // 0) debug large file
+                    // 1) separate the join and write steps into other for loops
+                    // 2) make sure you can create multiple threads
 
+                    // read a block
+                    byteBuffer = System.in.readNBytes(128 * 1024);
+                    if (byteBuffer.length == 0) {
+                        break; 
+                    }
+
+                    threads[i] = new CompressionThread();
+
+                    // update metadata
+                    bytesRead += byteBuffer.length;
+                    crc32.update(byteBuffer);
+
+                    // create thread
+                    threads[i].setData(byteBuffer);
+                    threads[i].start();
+                    threads[i].join();
+                    threads[i].write();
+                }
+
+            }
 
         } catch (IOException | InterruptedException e) {
             System.out.println("Error: " + e.getMessage());
@@ -48,7 +65,7 @@ public class Compressor {
      
     }
 
-    public void finish() {
+    public void writeTrailer() {
 
         try {
             
