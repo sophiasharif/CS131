@@ -128,6 +128,7 @@ $ ip a
     inet 164.67.100.233/24 brd 164.67.100.255 scope global noprefixroute eth0
        valid_lft forever preferred_lft forever
 
+
 ===== CPU COMPARISON OF GZIP, PIGZ, AND PIGZJ =====
 
 To compare the runtimes of these three programs, I ran the following shell script:
@@ -187,6 +188,7 @@ user	0m7.891s
 sys	0m0.591s
 
 
+
 ===== COMPRESSION RATIO COMPARISON =====
 I used this script to find the sizes in bytes of the outputs of the three compression programs:
 
@@ -211,8 +213,9 @@ echo "pigz: " >>compression.txt
 echo "      size: $pigz_size" >>compression.txt
 -----------------
 
+First, I tried running this script on a 11.44 MB file that was just the word "marshmellow" repeated several times. This was the output:
 
-
+----- compresion.txt -----
 Compression ratios of Pigzj and gzip
 File size: 12000000
 Pigzj: 
@@ -221,3 +224,32 @@ gzip:
       size: 23330
 pigz: 
       size: 25135
+--------------------------
+
+This means that for this file, these were the compression ratios:
+
+---- compression ratios ----
+Pigzj: 0.00222
+gzip: 0.00194
+pigz: 0.00209
+----------------------------
+
+Next, I tried the file "/usr/local/cs/jdk-21.0.2/lib/modules" on SEASnet, which is less repetitive than the marshmellow file and more representative of the type of data we might be trying to compress in the real-world. These were the results:
+
+----- compresion.txt -----
+File size: 139257677
+Pigzj: 
+      size: 47952936
+gzip: 
+      size: 47109901
+pigz: 
+      size: 47008853
+----------------------------
+
+---- compression ratios ----
+Pigzj: 0.344
+gzip: 0.338
+pigz: 0.337
+----------------------------
+
+The data indicates that gzip generally achieves the best compression ratio, particularly for less repetitive files, evidenced by its performance on the "/usr/local/cs/jdk-21.0.2/lib/modules" file with a ratio of 0.338, slightly better than pigz at 0.337 and Pigzj at 0.344. However, for highly repetitive content like the "marshmellow" file, the differences are less pronounced but gzip still leads slightly. This suggests gzip is slightly more efficient in compressing diverse file types, while Pigzj and pigz perform comparably with a slight edge for gzip.
