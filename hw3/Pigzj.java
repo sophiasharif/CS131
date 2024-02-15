@@ -1,11 +1,18 @@
-// import java.io.IOException;
-// import java.util.zip.CRC32;
-
-import java.util.zip.Deflater;
+import java.io.IOException;
 
 public class Pigzj {
     public static void main(String[] args) {
 
+        try {
+            if (System.in.available() == 0) {
+                // No input was passed to standard input
+                System.out.println("No input was passed to standard input.");
+                System.exit(1);
+            }
+        } catch (IOException e) {
+            System.err.println("I/O Error: " + e.getMessage());
+        }
+        
         
         int numThreads = Utils.getNumThreads(args);
         System.err.println("Number of threads: " + numThreads);

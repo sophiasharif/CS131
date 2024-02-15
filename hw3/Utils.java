@@ -13,7 +13,7 @@ public class Utils {
     }
 
     public static int getNumThreads(String[] args) {
-
+        int numCores = Runtime.getRuntime().availableProcessors();
         if (args.length > 0)  {
             if (args.length != 2 || !("-p".equals(args[0]))) {
                 System.err.println("Usage: java Pigzj -p <int>");
@@ -22,7 +22,10 @@ public class Utils {
             try {
                 int pValue = Integer.parseInt(args[1]);
 
-                // non negative, not 0, greater than number of cores
+                if (pValue <= 0 || pValue > numCores*4) {
+                    System.err.println("Error: value passed to -p must be 0 < pValue <= numCores * 4");
+                    System.exit(1);
+                }
 
                 return pValue;
             } catch (NumberFormatException e) {
@@ -30,6 +33,6 @@ public class Utils {
                 System.exit(1);
             }
         }
-        return Runtime.getRuntime().availableProcessors();
+        return numCores;
     }
 }
