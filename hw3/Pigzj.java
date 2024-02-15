@@ -3,8 +3,8 @@ public class Pigzj {
         Utils.checkForInput();
         int numThreads = Utils.getNumThreads(args);
         Compressor compressor = new Compressor(numThreads);
-        compressor.init();
+        compressor.writeHeader();
         compressor.compress();
-        compressor.finish();
+        compressor.writeTrailer();
     }
 }

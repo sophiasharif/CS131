@@ -13,7 +13,7 @@ public class Compressor {
         threads = new CompressionThread[num_threads];
     }
 
-    public void init() {
+    public void writeHeader() {
         // write header
         byte[] gzipHeader = {31, -117, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, -1};
         try { 
@@ -67,7 +67,7 @@ public class Compressor {
      
     }
 
-    public void finish() {
+    public void writeTrailer() {
 
         try {
             
