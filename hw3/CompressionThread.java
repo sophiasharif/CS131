@@ -3,8 +3,8 @@ import java.util.zip.Deflater;
 
 public class CompressionThread extends Thread {
     private byte[] data; 
-    public int compressedSize;
-    public byte[] output;
+    private int compressedSize;
+    private byte[] output;
     
     CompressionThread(byte[] data) {
         this.data = data;

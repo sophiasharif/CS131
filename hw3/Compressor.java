@@ -14,7 +14,6 @@ public class Compressor {
     }
 
     public void init() {
-
         // write header
         byte[] gzipHeader = {31, -117, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, -1};
         try { 
@@ -33,7 +32,6 @@ public class Compressor {
             while (byteBuffer.length != 0) {
 
                 int i;
-
                 for (i=0; i < threads.length; i++) {
 
                     // read a block
@@ -51,10 +49,12 @@ public class Compressor {
                     threads[i].start();
                 }
 
+                // wait for all threads to finish
                 for (int j=0; j<i; j++) {
                     threads[j].join();
                 }
 
+                // write sequentially
                 for (int j=0; j<i; j++) {
                     threads[j].write(baos);
                 }
@@ -73,7 +73,7 @@ public class Compressor {
             
             // prepare crc32 and size of compressed data for gzip trailer
             byte[] gzipTrailer = new byte[10];
-            gzipTrailer[0] = 0x03; // 
+            gzipTrailer[0] = 0x03; // adding these bytes is equivalent to calling .finish() on the deflater of the last thread
             gzipTrailer[1] = 0x00;
             Utils.writeInt((int) crc32.getValue(), gzipTrailer, 2);
             Utils.writeInt((int) bytesRead, gzipTrailer, 6);
