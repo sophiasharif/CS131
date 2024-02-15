@@ -4,10 +4,11 @@
 
 #!/bin/bash
 javac *.java
-file_size=$(wc -c <large.txt)
-pigzj_size=$(java Pigzj <large.txt | wc -c)
-gzip_size=$(gzip -c large.txt | wc -c)
-pigz_size=$(pigz -c large.txt | wc -c)
+input=/usr/local/cs/jdk-21.0.2/lib/modules
+file_size=$(wc -c <$input)
+pigzj_size=$(java Pigzj <$input | wc -c)
+gzip_size=$(gzip -c $input | wc -c)
+pigz_size=$(pigz -c $input | wc -c)
 echo "Compression ratios of Pigzj and gzip" >compression.txt
 echo "File size: $file_size" >>compression.txt
 echo "Pigzj: " >>compression.txt

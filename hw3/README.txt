@@ -185,3 +185,39 @@ sys	0m0.070s
 real	0m4.727s
 user	0m7.891s
 sys	0m0.591s
+
+
+===== COMPRESSION RATIO COMPARISON =====
+I used this script to find the sizes in bytes of the outputs of the three compression programs:
+
+----- shell -----
+# shell script to compare compression ratios of Pigzj and gzip
+# Usage: ./compression.sh
+# Output: compression.txt
+
+#!/bin/bash
+javac *.java
+file_size=$(wc -c <large.txt)
+pigzj_size=$(java Pigzj <large.txt | wc -c)
+gzip_size=$(gzip -c large.txt | wc -c)
+pigz_size=$(pigz -c large.txt | wc -c)
+echo "Compression ratios of Pigzj and gzip" >compression.txt
+echo "File size: $file_size" >>compression.txt
+echo "Pigzj: " >>compression.txt
+echo "      size: $pigzj_size" >>compression.txt
+echo "gzip: " >>compression.txt
+echo "      size: $gzip_size" >>compression.txt
+echo "pigz: " >>compression.txt
+echo "      size: $pigz_size" >>compression.txt
+-----------------
+
+
+
+Compression ratios of Pigzj and gzip
+File size: 12000000
+Pigzj: 
+      size: 26587
+gzip: 
+      size: 23330
+pigz: 
+      size: 25135
