@@ -1,4 +1,5 @@
-#!/bin/bash
-
 javac *.java
-java Pigzj <largefile.txt | gunzip -c
+cmp=$(java Pigzj <large.txt | gunzip | cmp - large.txt)
+if [ -z "$cmp" ]; then
+    echo "Success!"
+fi

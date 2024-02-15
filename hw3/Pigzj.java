@@ -1,15 +1,10 @@
-// import java.io.IOException;
-// import java.util.zip.CRC32;
-
-
 public class Pigzj {
     public static void main(String[] args) {
-        
-        Compressor compressor = new Compressor(1);
+        Utils.checkForInput();
+        int numThreads = Utils.getNumThreads(args);
+        Compressor compressor = new Compressor(numThreads);
         compressor.writeHeader();
         compressor.compress();
         compressor.writeTrailer();
-        
     }
-
 }
