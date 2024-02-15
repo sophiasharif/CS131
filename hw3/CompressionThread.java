@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream;
 import java.util.zip.Deflater;
 
 public class CompressionThread implements Runnable{
@@ -13,8 +14,8 @@ public class CompressionThread implements Runnable{
         this.compress();
     }
 
-    public void write() {
-        System.out.write(output, 0, compressedSize);
+    public void write(ByteArrayOutputStream baos) {
+        baos.write(output, 0, compressedSize);
     }
 
     private void compress() {

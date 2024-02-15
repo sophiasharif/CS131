@@ -1,17 +1,19 @@
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.CRC32;
 
 public class Compressor {
 
-    CRC32 crc32 = new CRC32();
-    int bytesRead = 0;
+    private CRC32 crc32 = new CRC32();
+    private int bytesRead = 0;
+    private ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
     public void init() {
 
         // write header
         byte[] gzipHeader = {31, -117, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, -1};
         try { 
-            System.out.write(gzipHeader); 
+            baos.write(gzipHeader); 
         } catch (IOException e) {
             System.err.println("Error in writing header: " + e);
         }
@@ -21,7 +23,8 @@ public class Compressor {
         
         try {
             // read all bytes from stdin
-            byte[] byteBuffer = System.in.readNBytes(128 * 1024);
+            // byte[] byteBuffer = System.in.readNBytes(128 * 1024);
+            byte[] byteBuffer = System.in.readAllBytes();
             bytesRead += byteBuffer.length;
 
             // calculate crc32 of input data
@@ -32,11 +35,11 @@ public class Compressor {
             Thread thread = new Thread(t1);
             thread.start();
             thread.join();
-            t1.write();
+            t1.write(baos);
 
 
         } catch (IOException | InterruptedException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage());
         }
      
     }
@@ -51,10 +54,11 @@ public class Compressor {
             Utils.writeInt((int) bytesRead, gzipTrailer, 4);
             
             // write header, compressed data, and trailer to stdout
-            System.out.write(gzipTrailer);
+            baos.write(gzipTrailer);
+            System.out.write(baos.toByteArray());
 
         } catch (IOException e) {
-            System.out.println("Error in writing trailer: " + e.getMessage());
+            System.err.println("Error in writing trailer: " + e.getMessage());
         }
     }
 }
