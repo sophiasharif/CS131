@@ -7,6 +7,11 @@ public class Compressor {
     private CRC32 crc32 = new CRC32();
     private int bytesRead = 0;
     private ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    CompressionThread[] threads;
+
+    Compressor(int num_threads) {
+        threads = new CompressionThread[num_threads];
+    }
 
     public void init() {
 
@@ -22,29 +27,37 @@ public class Compressor {
     public void compress() {
         
         try {
-            // read all bytes from stdin
-            // byte[] byteBuffer = System.in.readNBytes(128 * 1024);
 
             byte[] byteBuffer = {0}; // initialize to non-empty array so loop starts
             
             while (byteBuffer.length != 0) {
 
-                // read a block
-                byteBuffer = System.in.readNBytes(128 * 1024);
-                if (byteBuffer.length == 0) {
-                    break; 
-                }
-                
-                // update metadata
-                bytesRead += byteBuffer.length;
-                crc32.update(byteBuffer);
+                int i;
 
-                // create thread
-                CompressionThread t1 = new CompressionThread(byteBuffer);
-                Thread thread = new Thread(t1);
-                thread.start();
-                thread.join();
-                t1.write(baos);
+                for (i=0; i < threads.length; i++) {
+
+                    // read a block
+                    byteBuffer = System.in.readNBytes(128 * 1024);
+                    if (byteBuffer.length == 0) {
+                        break; 
+                    }
+                    
+                    // update metadata
+                    bytesRead += byteBuffer.length;
+                    crc32.update(byteBuffer);
+
+                    // create thread
+                    threads[i] = new CompressionThread(byteBuffer);
+                    threads[i].start();
+                }
+
+                for (int j=0; j<i; j++) {
+                    threads[j].join();
+                }
+
+                for (int j=0; j<i; j++) {
+                    threads[j].write(baos);
+                }
 
             }
 
