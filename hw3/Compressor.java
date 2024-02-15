@@ -24,19 +24,29 @@ public class Compressor {
         try {
             // read all bytes from stdin
             // byte[] byteBuffer = System.in.readNBytes(128 * 1024);
-            byte[] byteBuffer = System.in.readAllBytes();
-            bytesRead += byteBuffer.length;
 
-            // calculate crc32 of input data
-            crc32.update(byteBuffer);
+            byte[] byteBuffer = {0}; // initialize to non-empty array so loop starts
+            
+            while (byteBuffer.length != 0) {
 
-            // create thread
-            CompressionThread t1 = new CompressionThread(byteBuffer);
-            Thread thread = new Thread(t1);
-            thread.start();
-            thread.join();
-            t1.write(baos);
+                // read a block
+                byteBuffer = System.in.readNBytes(128 * 1024);
+                if (byteBuffer.length == 0) {
+                    break; 
+                }
+                
+                // update metadata
+                bytesRead += byteBuffer.length;
+                crc32.update(byteBuffer);
 
+                // create thread
+                CompressionThread t1 = new CompressionThread(byteBuffer);
+                Thread thread = new Thread(t1);
+                thread.start();
+                thread.join();
+                t1.write(baos);
+
+            }
 
         } catch (IOException | InterruptedException e) {
             System.err.println("Error: " + e.getMessage());
@@ -49,9 +59,11 @@ public class Compressor {
         try {
             
             // prepare crc32 and size of compressed data for gzip trailer
-            byte[] gzipTrailer = new byte[8];
-            Utils.writeInt((int) crc32.getValue(), gzipTrailer, 0);
-            Utils.writeInt((int) bytesRead, gzipTrailer, 4);
+            byte[] gzipTrailer = new byte[10];
+            gzipTrailer[0] = 0x03; // 
+            gzipTrailer[1] = 0x00;
+            Utils.writeInt((int) crc32.getValue(), gzipTrailer, 2);
+            Utils.writeInt((int) bytesRead, gzipTrailer, 6);
             
             // write header, compressed data, and trailer to stdout
             baos.write(gzipTrailer);

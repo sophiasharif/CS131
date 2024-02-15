@@ -21,9 +21,9 @@ public class CompressionThread implements Runnable{
     private void compress() {
         Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
         deflater.setInput(data);
-        deflater.finish();
-        output = new byte[data.length+100];
-        compressedSize = deflater.deflate(output);
+        // deflater.finish();
+        output = new byte[data.length+10];
+        compressedSize = deflater.deflate(output, 0, data.length+10, Deflater.SYNC_FLUSH);
         deflater.end();
     }
 }
