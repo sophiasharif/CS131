@@ -35,4 +35,16 @@ public class Utils {
         }
         return numCores;
     }
+
+    public static void checkForInput() {
+        try {
+            if (System.in.available() == 0) {
+                // No input was passed to standard input
+                System.out.println("No input was passed to standard input.");
+                System.exit(1);
+            }
+        } catch (IOException e) {
+            System.err.println("I/O Error: " + e.getMessage());
+        }
+    }
 }
