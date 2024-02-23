@@ -1,0 +1,3 @@
+#!/bin/bash
+
+gprolog --consult-file tower.pl

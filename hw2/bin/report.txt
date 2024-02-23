@@ -1,0 +1,92 @@
+==== Introduction ====
+
+The objective of this project is to facilitate the testing of grammars proposed
+ as test cases for CS 132 projects. I created a make_parser function that
+ generates a parser from a given grammar, consistent with the format introduced
+in Homework 1. When this parser function receives a string prefix representing
+ a program to parse, it outputs the corresponding unmatched suffix or an error
+  indication if no prefix of the string constitutes a valid program. 
+
+==== Implementation of make_matcher ====
+
+Base of Recursion (get_rule and try_rule Functions): The get_rule function
+iterates over a list of production rules for a nonterminal symbol, applying
+each rule to the input fragment until it finds a match or exhausts the list.
+If a rule matches, it returns the unmatched suffix of the fragment; otherwise,
+it returns None, indicating failure to match the fragment against the rules.
+
+The try_rule function attempts to match a specific rule against the input
+fragment. It deals with two cases: terminal symbols (T) and nonterminal
+symbols (N). If the current input symbol matches the terminal, the function
+continues with the rest of the rule and the remaining fragment. For terminal 
+symbols, it checks if the current symbol in the fragment matches the terminal;
+for nonterminal symbols, it recursively expands the nonterminal using 
+get_rule. The function expands the nonterminal into its production rules and 
+attempts to match the rest of the fragment against these rules, using a 
+modified acceptor to ensure the remainder of the rule also matches. For 
+acceptance testing, if the rule being tested is empty ([]), the function 
+attempts to accept the current fragment using the provided acceptor function. 
+If the input fragment is empty but the rule is not, the match fails (None), as
+it's not possible to match further. Finally, t he matcher (mm) is initialized 
+with the root nonterminal wrapped in a list and an acceptor. This setup 
+triggers the parsing process, starting from the root of the grammar and 
+attempting to match the entire input fragment.
+
+=== Implementation of make_parser using make_matcher ===
+
+The make_parser function, like make_matcher, is aimed at processing a given 
+grammar to parse an input string (or fragment). However, instead of simply 
+identifying whether a fragment can be matched against the grammar, make_parser
+constructs a parse tree that represents the hierarchical structure of the 
+grammar as applied to the fragment. The initial similarity to make_matcher 
+arises because both tasks involve traversing the grammar in a similar manner 
+to determine how the input can be decomposed according to the grammar's rules. 
+The difference lies in the output: make_parser builds a data structure (a 
+parse tree) reflecting this decomposition, while make_matcher simply indicates 
+a match's success or failure.
+
+- Tree Creation (create_tree Function): This function is central to 
+constructing the parse tree. It processes a "trace" of the parsing process, 
+which essentially represents the decisions made during parsing—what rules were 
+applied, in what order, and how the input was segmented according to these 
+rules.
+- Recursive Rule Parsing (parse_rule Function): This function recursively 
+constructs parts of the parse tree corresponding to each rule in the grammar. 
+It differentiates between terminal and nonterminal symbols:
+- For terminals (T), it appends a Leaf node to the parse tree.
+- For nonterminals (N), it recursively constructs a subtree using parse_nt,
+which represents the application of a nonterminal's rules, and wraps this 
+subtree in a Node.
+- Nonterminal Parsing (parse_nt Function): This function processes nonterminal
+symbols by delegating to parse_rule, effectively allowing the construction of 
+a subtree for each nonterminal encountered in the parsing process.
+
+==== Why the Similarity? ====
+The create_trace helper function of make_parser is almost identical to 
+make_matcher because both of them share the same task of traversing the 
+grammar according to the input fragment; the only difference is the output.
+Both functions need to identify which rules from the grammar can be applied to 
+the current segment of the input and recursively handle nonterminals by 
+exploring which of their corresponding rules can be applied. The difference is 
+what they do with that information. The make_matcher function uses it to 
+determine if a valid parsing path exists, returning success or failure 
+accordingly. In contrast, the make_parser goes a step further, using the same
+path exploration to build a detailed representation (a parse tree) of how the 
+input fits the grammar. However, this distinction only needs a small 
+difference in the code, as visible in the source code.
+
+==== Weaknesses ====
+
+Neither my matcher nor my parser work on left-recursive grammars. An example 
+of such a grammar would be one that contains a rule like: 
+Expr -> [ [N Expr; N Binop; N Term] ]. 
+When make_matcher or make_parser encounters a left-recursive rule, they try to 
+match the Expr before anything else is processed. Since the rule for Expr 
+starts with Expr itself, the function calls itself recursively without 
+advancing through the input string. This leads to infinite recursion, as there 
+is no base case reached or any input consumed to eventually terminate the 
+recursion. Since no input is consumed before the recursive call (the parser 
+keeps trying to match Expr from the start), there's no progress in parsing the
+input. Effective parsing requires each recursive call to consume some part of 
+the input, gradually reducing it until either the entire input is successfully
+parsed or a mismatch is detected.

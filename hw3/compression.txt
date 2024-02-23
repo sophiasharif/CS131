@@ -1,6 +1,0 @@
-Compression ratios of Pigzj and gzip
-File size:  12000000
-Pigzj: 
-      size:    26587
-gzip: 
-      size:    23344

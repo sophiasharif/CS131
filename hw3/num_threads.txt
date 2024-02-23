@@ -1,4 +1,0 @@
-Runtime of Pigzj with different number of threads
-Pigzj: 
-      time: 
-      threads: 

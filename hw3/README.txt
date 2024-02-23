@@ -188,6 +188,34 @@ user	0m7.891s
 sys	0m0.591s
 
 
+===== TIME BASED ON NUMBER OF THREADS ====
+
+To find the relationships between the number of threads and the runtime of pigz and Pigzj, I ran averaged the results of three time trials of running either program with 1, 2, 3, 4, 8, 12, and 16 threads. The number of cores available on SEASnet for my java program is 4, so per the specification, my program would not accept arguments to -p greater than 4. These were the real times for each of these trials:
+
+--- Pigzj --- 
+1:  0m0.707s
+2:  0m1.034s
+3:  0m0.816s
+4:  0m0.741s
+8:  0m0.786s
+12: 0m0.625s
+16:	0m0.488s
+
+---- pigz ---- 
+1:	0m0.140s
+2:	0m0.129s
+3:	0m0.110s
+4:	0m0.171s
+8:	0m0.150s
+12:	0m0.083s
+16:	0m0.183s
+
+The data shows that for Pigzj, increasing the number of threads generally decreases runtime, notably after exceeding the core limit (4), suggesting efficient parallel processing beyond available cores, possibly due to hyper-threading or better management of I/O operations. Pigzj's lowest runtime at 16 threads indicates its scalability with threads.
+
+For pigz, runtime decreases initially with more threads, highlighting improved performance with parallel processing. However, the increase at 4 and 16 threads suggests potential overhead or less effective handling of threads beyond the physical core count, with optimal performance at 12 threads.
+
+Overall, pigz consistently outperforms Pigzj in terms of speed across all thread counts, demonstrating its efficiency in compressing files with varying numbers of threads, even though Pigzj shows a pattern of improved performance with increased threading, especially beyond the system's physical core limit.
+
 
 ===== COMPRESSION RATIO COMPARISON =====
 I used this script to find the sizes in bytes of the outputs of the three compression programs:
@@ -253,3 +281,76 @@ pigz: 0.337
 ----------------------------
 
 The data indicates that gzip generally achieves the best compression ratio, particularly for less repetitive files, evidenced by its performance on the "/usr/local/cs/jdk-21.0.2/lib/modules" file with a ratio of 0.338, slightly better than pigz at 0.337 and Pigzj at 0.344. However, for highly repetitive content like the "marshmellow" file, the differences are less pronounced but gzip still leads slightly. This suggests gzip is slightly more efficient in compressing diverse file types, while Pigzj and pigz perform comparably with a slight edge for gzip.
+
+
+===== STRACE FOR GZIP, PIGZ, and PIGZJ ====
+
+---- gzip ---- 
+The strace output for gzip compressing large.txt shows the sequence of system calls made by gzip. It starts with execve to execute the gzip program. The script then allocates memory (brk, mmap), checks for dynamic libraries (access, openat, fstat, mmap, close), sets up signal handlers (rt_sigaction, rt_sigprocmask), and opens the source file large.txt and the destination compressed file large.txt.gz for reading and writing respectively.
+
+Gzip reads the content of large.txt in chunks (as seen with multiple read calls), compresses it, and writes the compressed data to large.txt.gz (indicated by the write call). After compression, it sets the file's access and modification times (utimensat), changes the ownership (fchown), and adjusts the file permissions (fchmod). Finally, it deletes the original file (unlinkat) and exits cleanly (exit_group).
+
+This trace highlights the system-level operations involved in file compression, including memory management, file I/O, and process exit
+
+--- pigz --- 
+The strace output for pigz attempting to compress largefile.txt shows the sequence of system calls made. Initially, it tries to execute pigz, allocates memory, and accesses necessary libraries (libc, libm, libpthread, libz) for execution. It sets up signal handling and thread-related configurations.
+
+Significantly, it fails to locate largefile.txt (lstat returns -1 ENOENT, indicating the file does not exist). Consequently, pigz prints an error message ("skipping: largefile.txt does not exist") to stderr and exits with a status code of 1, indicating an error.
+
+This strace primarily highlights the attempt to compress a non-existent file, showcasing system call usage for file operations, memory management, and error handling in a parallel compression utility.
+
+--- Pigzj ---
+The process starts with execve, initializing the Java process and setting up the environment with arch_prctl and memory allocation through brk.
+
+The JVM attempts to load necessary shared libraries, such as libz.so.1 and libjli.so, by searching through custom JDK paths and standard system locations. This search includes attempts to access libraries in directories tailored for specific hardware capabilities like tls and haswell, but many attempts result in ENOENT errors, indicating missing files. This step illustrates the dynamic linking process to resolve library dependencies.
+
+Finally, the output shows the JVM configuring support for multi-threading with libpthread, dynamic linking with libdl, and utilizing standard library functions through libc. Operations for memory management and thread setup, including mmap, mprotect, and adjustments to the program break (brk), are evident. The orderly shutdown of the JVM after executing the Pigzj class is indicated by exit_group, marking the end of the process. This sequence provides insight into the JVM's operational steps from start to finish, involving library loading, memory management, and preparation for multi-threaded execution.
+
+---- Compare & Contrast of gzip, pigz, and Pigzj strace ----
+
+Commonalities:
+
+- Library Loading and System Calls: All three processes involve common system calls such as execve for executing the program, brk and mmap for memory management, and openat, read, and close for file operations. This reflects a fundamental similarity in how Unix-based applications interact with the operating system to access resources.
+- Dynamic Linking: Each process attempts to dynamically load shared libraries (libc.so.6, libpthread.so.0, etc.) necessary for execution, indicating reliance on the Linux standard library for basic functionalities like I/O operations, multi-threading, and memory management.
+
+Differences: 
+- Parallelism and Efficiency: pigz and Pigzj are designed to take advantage of multiple CPU cores for parallel compression, contrasting with gzip, which is single-threaded. This is implied in the strace output by the presence of thread-related system calls (clone, set_tid_address, set_robust_list) in pigz and Pigzj. Pigzj specifically shows Java-related initialization and JVM setup, indicating a different runtime environment compared to the more direct system interactions of gzip and pigz.
+- Execution Environment: gzip and pigz are executed directly as binaries, while Pigzj runs within the Java Virtual Machine (JVM), as evidenced by the invocation of the java command. This introduces additional overhead for Pigzj, with JVM initialization and class loading, but also allows it to be platform-independent.
+- File Handling and Operations: The strace for gzip shows a straightforward sequence of file operations, reflecting its simpler, single-threaded execution model. In contrast, pigz and Pigzj exhibit more complex behavior, including additional thread management and synchronization system calls, which are part of their parallel processing capability.
+- Error Handling and Searches: The Pigzj trace includes numerous attempts to open non-existent files, particularly looking for specific versions of the libz.so.1 library in various directories. This reflects the JVM's thorough search process for libraries and its preparation to support a wide range of hardware capabilities, unlike the more straightforward approach seen in gzip and pigz.
+
+--- Do these explain the differences in performance we observe? ---
+
+Yes. In summary, while gzip, pigz, and Pigzj share a common goal and similar system-level interactions, pigz and Pigzj distinguish themselves by employing parallel processing to improve performance. However, Pigzj further differentiates itself by running on the JVM, which adds sone overhead that decreases its performance.
+
+==== FINAL THOUGHTS =====
+
+---- Overview ----
+The analysis of gzip, pigz, and Pigzj involved examining their operational behavior through strace outputs and understanding the multi-threaded approach in Pigzj. gzip operates as a single-threaded application, pigz utilizes multiple cores for parallel compression, and Pigzj is a Java implementation that follows a similar multi-threading model to pigz.
+
+---- Observations ----
+
+1. Scalability with File Size:
+As file size increases, gzip may become increasingly slower due to its single-threaded nature.
+pigz and Pigzj are likely to handle larger files more efficiently by distributing the workload across multiple threads. However, the efficiency gain from parallel processing has diminishing returns as overhead from thread management and synchronization becomes significant.
+
+2. Impact of Thread Count:
+Increasing the number of threads in pigz and Pigzj can improve performance up to a point. Beyond the optimal level, too many threads may lead to increased context switching and synchronization overhead, potentially degrading performance.
+The optimal number of threads is often related to the number of available processor cores. Pigzj dynamically adjusts to the available cores but allows user specification, which could be both a feature and a pitfall if misconfigured.
+
+3. Performance Expectations:
+For smaller files or on systems with fewer cores, the performance difference between gzip, pigz, and Pigzj might be minimal. However, for large files on multi-core systems, pigz and Pigzj are expected to outperform gzip.
+Between pigz and Pigzj, pigz is expected to have a slight edge in performance due to lower overhead. Pigzj runs on the JVM, which introduces additional startup time and runtime overhead compared to native applications like pigz.
+
+--- Potential Problems --- 
+
+1. Memory Usage 
+Parallel compression increases memory usage. As the number of threads grows, so does the memory footprint, which could become a limiting factor on systems with limited RAM.
+
+2. I/O Bottleneck
+For all methods, disk I/O can become a bottleneck, especially with SSDs or fast network storage. Parallel processing intensifies this by increasing the number of simultaneous read/write operations.
+3. Complexity and Overhead of JVM
+Pigzj's reliance on the JVM adds complexity and overhead, which might not be justifiable for all use cases. The startup time and additional memory consumption could outweigh the benefits of parallel processing for smaller tasks.
+
+---- Conclusion ---- 
+pigz generally offers the best balance between performance and resource usage for multi-core systems handling large compression tasks. gzip remains a reliable choice for simplicity and compatibility, particularly in single-core environments or for small files. Pigzj provides a versatile, if somewhat heavyweight, alternative that leverages Java's platform independence and ease of integration into existing Java applications. The choice between these methods should consider the specific requirements of the task, including file size, system resources, and execution environment.
