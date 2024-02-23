@@ -40,3 +40,11 @@ valid_grid_counts(G, counts(T,B,L,R)) :-
 valid_tower_counts([],[]).
 valid_tower_counts([TowersH|TowersT], [CountH|CountT]) :- valid_tower_count(TowersH, CountH), valid_tower_counts(TowersT, CountT).
 % valid_grid_counts([[2,3,4,5,1],[5,4,1,3,2],[4,1,5,2,3],[1,2,3,4,5],[3,5,2,1,4]], counts([2,3,2,1,4], [3,1,3,3,2], [4,1,2,5,2], [2,4,2,1,2])).
+
+% plain_ntower/3
+plain_ntower(0, [], counts([],[],[],[])).
+plain_ntower(N,T,C) :- valid_grid(N, T), valid_grid_counts(T, C).
+
+ntower(N,T,C) :- plain_ntower(N,T,C).
+
+
