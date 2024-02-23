@@ -29,17 +29,14 @@ valid_tower_count_helper([H|T], Tallest, Acc, C) :-
     valid_tower_count_helper(T, Tallest, Acc, C).
 
 % check count for multiple lists
-valid_tower_counts([],[]).
-valid_tower_counts([TowersH|TowersT], [CountH|CountT]) :- valid_tower_count(TowersH, CountH), valid_tower_counts(TowersT, CountT).
-
 valid_grid_counts(G, counts(T,B,L,R)) :- 
     transpose(G, GT),
     reverse_matrix(G, GR),
-    reverse_matrix(G, GRT),
+    reverse_matrix(GT, GTR),
     valid_tower_counts(G, L),
     valid_tower_counts(GT, T),
-    write(GR), nl, 
-    write(GRT), nl,
-    true.
-
+    valid_tower_counts(GR, R),
+    valid_tower_counts(GTR, B).
+valid_tower_counts([],[]).
+valid_tower_counts([TowersH|TowersT], [CountH|CountT]) :- valid_tower_count(TowersH, CountH), valid_tower_counts(TowersT, CountT).
 % valid_grid_counts([[2,3,4,5,1],[5,4,1,3,2],[4,1,5,2,3],[1,2,3,4,5],[3,5,2,1,4]], counts([2,3,2,1,4], [3,1,3,3,2], [4,1,2,5,2], [2,4,2,1,2])).
