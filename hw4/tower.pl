@@ -22,18 +22,15 @@ valid_row(N, Row) :- append(Pre, [N|Post], Row), append(Pre, Post, NewRow),
                     N1 is N-1, valid_row(N1, NewRow).
 valid_rows(N,G) :- maplist(valid_row(N), G).
 
-
 % valid_grid_fd/2 -- optimized version of valid_grid_fd
 valid_grid_fd(N,G) :- is_N_by_N_grid(N, G), 
     valid_rows_fd(N, G), 
     transpose(G, GT), 
     valid_rows_fd(N, GT).
-
 valid_row_fd(N, Row):- fd_domain(Row, 1, N), fd_all_different(Row), fd_labeling(Row).
 valid_rows_fd(N,G) :- maplist(valid_row_fd(N), G).
 
-
-% check count for one list
+% valid_tower_count/2 -- check that C towers are visible in list Towers
 valid_tower_count(Towers, C) :- valid_tower_count_helper(Towers, 0, 0, C).
 valid_tower_count_helper([], _, C, C).
 valid_tower_count_helper([H|T], Tallest, Acc, C) :- 
@@ -44,8 +41,7 @@ valid_tower_count_helper([H|T], Tallest, Acc, C) :-
     H < Tallest,
     valid_tower_count_helper(T, Tallest, Acc, C).
 
-
-% check count for multiple lists
+% valid_grid_counts/2 -- check that counts structure accurately describes grid G
 valid_grid_counts(G, counts(T,B,L,R)) :- 
     transpose(G, GT),
     reverse_matrix(G, GR),
@@ -57,15 +53,15 @@ valid_grid_counts(G, counts(T,B,L,R)) :-
 valid_tower_counts([],[]).
 valid_tower_counts([TowersH|TowersT], [CountH|CountT]) :- valid_tower_count(TowersH, CountH), valid_tower_counts(TowersT, CountT).
 
-% plain_ntower/3
+% 1 -- plain_ntower/3
 plain_ntower(0, [], counts([],[],[],[])).
 plain_ntower(N,T,C) :- valid_grid(N, T), valid_grid_counts(T, C).
 
+% 2 -- ntower/3
 ntower(0, [], counts([],[],[],[])).
 ntower(N,T,C) :- valid_grid_fd(N, T), valid_grid_counts(T, C).
 
-
-% 3 -- measure performance difference
+% 3 -- speedup/1
 measure_plain_ntower(N, T, C, ExecutionTime) :-
     statistics(cpu_time, [Start|_]), 
     plain_ntower(N, T, C),       
@@ -84,5 +80,5 @@ speedup(Ratio) :-
     E_adjusted is E2+1, % make sure we don't divide by 0
     Ratio is E1/E_adjusted.
 
-% 4 -- find ambiguity
+% 4 -- ambiguous/4
 ambiguous(N, C, T1, T2) :- ntower(N, T1, C), ntower(N, T2, C), T1 \= T2.

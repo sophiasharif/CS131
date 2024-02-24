@@ -1,0 +1,35 @@
+==== ntower and plain_ntower speed comparison ===
+
+To measure the difference between my ntower and plain_ntower functions, I used my speedup/1 predicate with the testcase below:
+    
+    4, T, counts(
+        [1,2,3,3],
+        [3,3,1,2],
+        [1,2,2,2],
+        [4,3,1,2])
+
+Running speedup(R) unified 651.0 with R, meaning that my plain_ntower that uses functions from the finite domain library has significanly better performance than my plain_ntower.
+
+==== Ambiguous Puzzle ====
+
+To find an ambiguous puzzle, I ran ambiguous(4, C, T1, T2). Here is one example:
+
+C = counts(
+    [4,2,2,1],
+    [1,2,2,4],
+    [4,2,2,1],
+    [1,2,2,4]
+    )
+T1 = [
+    [1,2,3,4],
+    [2,1,4,3],
+    [3,4,1,2],
+    [4,3,2,1]
+    ]
+T2 = [
+    [1,2,3,4],
+    [2,4,1,3],
+    [3,1,4,2],
+    [4,3,2,1]
+    ]
+
