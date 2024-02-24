@@ -8,14 +8,29 @@ lists_firsts_rests([[F|R]|T], [F|Fs], [R|Rs]) :- lists_firsts_rests(T, Fs, Rs).
 reverse_matrix([], []).
 reverse_matrix([H|T],[RH|RT]) :- reverse(H, RH), reverse_matrix(T, RT).
 
-% check this is an NxN grid and rows & cols follow rules
-valid_grid(N,G) :- is_N_by_N_grid(N, G), valid_rows(N, G), transpose(G, GT), valid_rows(N, GT).
+% valid_grid/2 -- check this is an NxN grid and rows & cols follow rules
+valid_grid(N,G) :- is_N_by_N_grid(N, G), 
+    valid_rows(N, G), 
+    transpose(G, GT), 
+    valid_rows(N, GT).
 length_(N,L) :- length(L,N).
 is_N_by_N_grid(N,Grid) :- length(Grid, N), maplist(length_(N), Grid).
 valid_row(0, []).
 valid_row(N, Row) :- append(Pre, [N|Post], Row), append(Pre, Post, NewRow), 
                     N1 is N-1, valid_row(N1, NewRow).
 valid_rows(N,G) :- maplist(valid_row(N), G).
+
+
+% valid_grid_fd/2 -- optimized version of valid_grid_fd
+valid_grid_fd(N,G) :- is_N_by_N_grid(N, G), 
+    valid_rows_fd(N, G), 
+    transpose(G, GT), 
+    valid_rows_fd(N, GT).
+
+valid_row_fd(N, Row):- fd_domain(Row, 1, N), fd_all_different(Row), fd_labeling(Row).
+valid_rows_fd(N,G) :- maplist(valid_row_fd(N), G).
+
+
 
 % check count for one list
 valid_tower_count(Towers, C) :- valid_tower_count_helper(Towers, 0, 0, C).
@@ -45,6 +60,8 @@ valid_tower_counts([TowersH|TowersT], [CountH|CountT]) :- valid_tower_count(Towe
 plain_ntower(0, [], counts([],[],[],[])).
 plain_ntower(N,T,C) :- valid_grid(N, T), valid_grid_counts(T, C).
 
-ntower(N,T,C) :- plain_ntower(N,T,C).
+ntower(0, [], counts([],[],[],[])).
+ntower(N,T,C) :- valid_grid_fd(N, T), valid_grid_counts(T, C).
 
-
+% find_mismatch(N, G) :- plain_ntower(N, G, CP), ntower(N, G, CT), CP \= CT.
+matches(N, G) :- valid_grid(N,G) == valid_grid_fd(N,G).
