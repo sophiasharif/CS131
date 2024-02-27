@@ -22,7 +22,7 @@ valid_row(N, Row) :- append(Pre, [N|Post], Row), append(Pre, Post, NewRow),
                     N1 is N-1, valid_row(N1, NewRow).
 valid_rows(N,G) :- maplist(valid_row(N), G).
 
-% valid_grid_fd/2 -- optimized version of valid_grid_fd
+% valid_grid_fd/2 -- optimized version of valid_grid
 valid_grid_fd(N,G) :- is_N_by_N_grid(N, G), 
     valid_rows_fd(N, G), 
     transpose(G, GT), 
@@ -53,13 +53,13 @@ valid_grid_counts(G, counts(T,B,L,R)) :-
 valid_tower_counts([],[]).
 valid_tower_counts([TowersH|TowersT], [CountH|CountT]) :- valid_tower_count(TowersH, CountH), valid_tower_counts(TowersT, CountT).
 
-% 1 -- plain_ntower/3
-plain_ntower(0, [], counts([],[],[],[])).
-plain_ntower(N,T,C) :- valid_grid(N, T), valid_grid_counts(T, C).
-
-% 2 -- ntower/3
+% 1 -- ntower/3
 ntower(0, [], counts([],[],[],[])).
 ntower(N,T,C) :- valid_grid_fd(N, T), valid_grid_counts(T, C).
+
+% 2 -- plain_ntower/3
+plain_ntower(0, [], counts([],[],[],[])).
+plain_ntower(N,T,C) :- valid_grid(N, T), valid_grid_counts(T, C).
 
 % 3 -- speedup/1
 measure_plain_ntower(N, T, C, ExecutionTime) :-
