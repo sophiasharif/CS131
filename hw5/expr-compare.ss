@@ -46,33 +46,32 @@
 (define (element-compare x y)
   (if (eqv? x `()) `() (cons (expr-compare (car x) (car y)) (element-compare (cdr x) (cdr y)))))
 
+
+(define x-dict-stack '())
+(define y-dict-stack '())
+
 (define (lambda-compare x y)
+  
+  ; update param dicts
+  (create-param-dict (cadr x) (cadr y))
+  
   (let* (
         [decl (if (and (eqv? (car x) 'lambda) (eqv? (car y) 'lambda)) 'lambda 'λ)]      
-        [param-dicts (create-param-dict (cadr x) (cadr y))]
-        [x-param-dict (car param-dicts)]
-        [y-param-dict (cadr param-dicts)]
-        [x-params (rename-args (cadr x) x-param-dict)] ; DELETE
-        [y-params (rename-args (cadr y) y-param-dict)] ; DELETE
+        [x-param-dict (car x-dict-stack)]
+        [y-param-dict (car y-dict-stack)]
+        [x-params (rename-args (cadr x) x-param-dict)]
+        [y-params (rename-args (cadr y) y-param-dict)]
         [x-body (rename-args (caddr x) x-param-dict)]
         [y-body (rename-args (caddr y) y-param-dict)]
+        [res (list decl (expr-compare x-params y-params) (expr-compare x-body y-body))]
         )
-    
-    ; replace identifiers with proper format -- IMPLEMENT
-    ;(write x-param-dict) (newline)
-    ;(write y-param-dict) (newline)
-    ;(write (cadr x)) (newline)
-    ;(write x-params) (newline)
-    ;(write (cadr y)) (newline)
-    ;(write y-params) (newline)
-    ;(write (caddr x)) (newline)
-    ;(write x-body) (newline)
-    ;(write (caddr y)) (newline)
-    ;(write y-body) (newline)
   
-    
-    (list decl (expr-compare x-params y-params) (expr-compare x-body y-body)))
-  )
+     ; pop dicts off the stack
+    (set! x-dict-stack (cdr x-dict-stack))
+    (set! y-dict-stack (cdr y-dict-stack))
+    (write x-dict-stack) (newline)
+    (write y-dict-stack) (newline)
+    res ))
 
 (define (create-param-dict x-params y-params)
   (let* ([x-param-dict (make-hash)]
@@ -86,8 +85,12 @@
               (and (hash-set! x-param-dict a new-param) (hash-set! y-param-dict b new-param))
              )))])
     (map handle-params x-params y-params)
-    `(,x-param-dict ,y-param-dict)
-    ))
+
+    ; update stacks of dicts
+    (set! x-dict-stack (cons (hash-copy x-param-dict) x-dict-stack))
+    (write x-dict-stack) (newline)
+    (set! y-dict-stack (cons (hash-copy y-param-dict) y-dict-stack))
+    (write y-dict-stack) (newline)))
 
 
 (define (rename-args expr dict)
@@ -98,4 +101,4 @@
 
 
   
-;(expr-compare '((lambda (a) a) c) '((lambda (b) b) d))
+(expr-compare '((lambda (a) a) c) '((lambda (b) b) d))
