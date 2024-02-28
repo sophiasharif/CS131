@@ -5,7 +5,7 @@
     (cond
 
       ; no difference
-      [(equal? x y) x]
+      [(equal? (rename-args x (car x-dict-stack)) (rename-args y (car y-dict-stack))) (rename-args x (car x-dict-stack))]
 
       ; bool
       [(and (boolean? x) (boolean? y)) (if x '% '(not %))]
@@ -14,11 +14,11 @@
       [(and (list? x) (list? y) (= (length x) (length y))) (list-compare x y)]
 
       ; different otherise
-      [else `(if % ,x ,y)])))
+      [else `(if % ,(rename-args x (car x-dict-stack)) ,(rename-args y (car y-dict-stack)))])))
 
 ; element-wise compare of lists (which are either quotes, lambdas, or if statements)
 (define (list-compare x y)
-  (let (
+  (let* (
         [car-x (car x)]
         [car-y (car y)]
         [lambda? (lambda (x) (member x '(lambda λ)))]
@@ -37,7 +37,7 @@
         (xor (lambda? car-x) (lambda? car-y))       
         (xor (if? car-x) (if? car-y))
         (or (quote? car-x) (quote? car-y)))
-       `(if % ,x ,y)]
+       `(if % ,(rename-args x (car x-dict-stack)) ,(rename-args y (car y-dict-stack)))]
       
       ; if statement, list, cons, quote
       [else (element-compare x y)]
@@ -59,11 +59,11 @@
         [decl (if (and (eqv? (car x) 'lambda) (eqv? (car y) 'lambda)) 'lambda 'λ)]      
         [x-param-dict (car x-dict-stack)]
         [y-param-dict (car y-dict-stack)]
-        [x-params (rename-args (cadr x) x-param-dict)]
-        [y-params (rename-args (cadr y) y-param-dict)]
-        [x-body (rename-args (caddr x) x-param-dict)]
-        [y-body (rename-args (caddr y) y-param-dict)]
-        [res (list decl (expr-compare x-params y-params) (expr-compare x-body y-body))]
+        ;[x-params (rename-args (cadr x) x-param-dict)]
+        ;[y-params (rename-args (cadr y) y-param-dict)]
+        ;[x-body (rename-args (caddr x) x-param-dict)]
+        ;[y-body (rename-args (caddr y) y-param-dict)]
+        [res (list decl (expr-compare (cadr x) (cadr y)) (expr-compare (caddr x) (caddr y)))]
         )
   
      ; pop dicts off the stack
