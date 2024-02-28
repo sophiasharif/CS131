@@ -47,8 +47,8 @@
   (if (eqv? x `()) `() (cons (expr-compare (car x) (car y)) (element-compare (cdr x) (cdr y)))))
 
 
-(define x-dict-stack '())
-(define y-dict-stack '())
+(define x-dict-stack (list (make-hash)))
+(define y-dict-stack (list (make-hash)))
 
 (define (lambda-compare x y)
   
@@ -74,8 +74,8 @@
     res ))
 
 (define (create-param-dict x-params y-params)
-  (let* ([x-param-dict (make-hash)]
-        [y-param-dict (make-hash)]
+  (let* ([x-param-dict (hash-copy (car x-dict-stack))]
+        [y-param-dict (hash-copy (car y-dict-stack))]
         [handle-params
          (lambda (a b)
            (let ([new-param (string->symbol (string-append (symbol->string a) "!" (symbol->string b)))])
@@ -87,9 +87,9 @@
     (map handle-params x-params y-params)
 
     ; update stacks of dicts
-    (set! x-dict-stack (cons (hash-copy x-param-dict) x-dict-stack))
+    (set! x-dict-stack (cons x-param-dict x-dict-stack))
     (write x-dict-stack) (newline)
-    (set! y-dict-stack (cons (hash-copy y-param-dict) y-dict-stack))
+    (set! y-dict-stack (cons y-param-dict y-dict-stack))
     (write y-dict-stack) (newline)))
 
 
