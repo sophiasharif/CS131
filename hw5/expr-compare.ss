@@ -43,36 +43,41 @@
       [else (element-compare x y)]
       )))
 
+
 (define (element-compare x y)
   (if (eqv? x `()) `() (cons (expr-compare (car x) (car y)) (element-compare (cdr x) (cdr y)))))
 
+
 (define (lambda-compare x y)
+
+  ; rename args
+  (let* ([processed-lambdas (rename-args x y)]
+         [x_ (car processed-lambdas)] [y_ (cadr processed-lambdas)]
+         [decl (if (and (eqv? (car x) 'lambda) (eqv? (car y) 'lambda)) 'lambda 'λ)])
+
+    ; call expr-compare on args and body, then reconstruct into new lambda
+    (list decl (expr-compare (cadr x_) (cadr y_)) (expr-compare (caddr x_) (caddr y_)))))
+
+
+(define (rename-args x y) ; input x & y are lambdas, output x & y are lamdas with parameters following naming convention
   (let* (
-        [decl (if (and (eqv? (car x) 'lambda) (eqv? (car y) 'lambda)) 'lambda 'λ)]      
         [param-dicts (create-param-dict (cadr x) (cadr y))]
         [x-param-dict (car param-dicts)]
         [y-param-dict (cadr param-dicts)]
-        [x-params (rename-args (cadr x) x-param-dict)] ; DELETE
-        [y-params (rename-args (cadr y) y-param-dict)] ; DELETE
-        [x-body (rename-args (caddr x) x-param-dict)]
-        [y-body (rename-args (caddr y) y-param-dict)]
+        [x-params (replace-args (cadr x) x-param-dict)] 
+        [y-params (replace-args (cadr y) y-param-dict)] 
+        [x-body (replace-args (caddr x) x-param-dict)]
+        [y-body (replace-args (caddr y) y-param-dict)]
+        [processed-x (list (car x) x-params x-body)]
+        [processed-y  (list (car y) y-params y-body)]
         )
-    
-    ; replace identifiers with proper format -- IMPLEMENT
-    ;(write x-param-dict) (newline)
-    ;(write y-param-dict) (newline)
-    ;(write (cadr x)) (newline)
-    ;(write x-params) (newline)
-    ;(write (cadr y)) (newline)
-    ;(write y-params) (newline)
-    ;(write (caddr x)) (newline)
-    ;(write x-body) (newline)
-    ;(write (caddr y)) (newline)
-    ;(write y-body) (newline)
-  
-    
-    (list decl (expr-compare x-params y-params) (expr-compare x-body y-body)))
-  )
+    (list processed-x processed-y)))
+
+(define (replace-args expr dict)
+  (if (list? expr)
+      (map (lambda (x) (replace-args x dict)) expr)
+      (hash-ref dict expr expr)
+      ))
 
 (define (create-param-dict x-params y-params)
   (let* ([x-param-dict (make-hash)]
@@ -89,12 +94,6 @@
     `(,x-param-dict ,y-param-dict)
     ))
 
-
-(define (rename-args expr dict)
-  (if (list? expr)
-      (map (lambda (x) (rename-args x dict)) expr)
-      (hash-ref dict expr expr)
-      ))
 
 
   
