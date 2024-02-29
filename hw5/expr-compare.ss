@@ -1,11 +1,16 @@
 #lang racket
 
+(define x-dict-stack (list (make-hash)))
+(define y-dict-stack (list (make-hash)))
+
+(define (return-different x y) `(if % ,(rename-args x (car x-dict-stack)) ,(rename-args y (car y-dict-stack))))
+
 (define expr-compare
   (lambda (x y)
     (cond
 
       ; no difference
-      [(equal? x y) x]
+      [(equal? (rename-args x (car x-dict-stack)) (rename-args y (car y-dict-stack))) (rename-args x (car x-dict-stack))]
 
       ; bool
       [(and (boolean? x) (boolean? y)) (if x '% '(not %))]
@@ -14,11 +19,10 @@
       [(and (list? x) (list? y) (= (length x) (length y))) (list-compare x y)]
 
       ; different otherise
-      [else `(if % ,x ,y)])))
+      [else (return-different x y)])))
 
-; element-wise compare of lists (which are either quotes, lambdas, or if statements)
 (define (list-compare x y)
-  (let (
+  (let* (
         [car-x (car x)]
         [car-y (car y)]
         [lambda? (lambda (x) (member x '(lambda λ)))]
@@ -30,71 +34,63 @@
     (cond
 
       ; both lambda
-      [(and (lambda? car-x) (lambda? car-y)) (lambda-compare x y)]
+      [(and (lambda? car-x) (lambda? car-y))
+       (if (not (= (length (cadr x)) (length (cadr y)))) ; check number of params is equal
+           (return-different x y) 
+           (lambda-compare x y))]
 
       ; type mismatch or quote
       [(or
         (xor (lambda? car-x) (lambda? car-y))       
         (xor (if? car-x) (if? car-y))
         (or (quote? car-x) (quote? car-y)))
-       `(if % ,x ,y)]
+        (return-different x y)]
       
       ; if statement, list, cons, quote
       [else (element-compare x y)]
       )))
 
-
-(define (element-compare x y)
-  (if (eqv? x `()) `() (cons (expr-compare (car x) (car y)) (element-compare (cdr x) (cdr y)))))
-
+(define (element-compare x y) (if (eqv? x `()) `() (cons (expr-compare (car x) (car y)) (element-compare (cdr x) (cdr y)))))
 
 (define (lambda-compare x y)
+  
+  (update-param-dicts (cadr x) (cadr y))
+  
+  (let* ([decl (if (and (eqv? (car x) 'lambda) (eqv? (car y) 'lambda)) 'lambda 'λ)]      
+        [res (list decl (expr-compare (cadr x) (cadr y)) (expr-compare (caddr x) (caddr y)))])
+  
+     ; pop dicts off the stack
+    (set! x-dict-stack (cdr x-dict-stack))
+    (set! y-dict-stack (cdr y-dict-stack))
 
-  ; rename args
-  (let* ([processed-lambdas (rename-args x y)]
-         [x_ (car processed-lambdas)] [y_ (cadr processed-lambdas)]
-         [decl (if (and (eqv? (car x) 'lambda) (eqv? (car y) 'lambda)) 'lambda 'λ)])
+    res))
 
-    ; call expr-compare on args and body, then reconstruct into new lambda
-    (list decl (expr-compare (cadr x_) (cadr y_)) (expr-compare (caddr x_) (caddr y_)))))
+(define (update-param-dicts x-params y-params)
+  (let* (   
+        ; get most recent param dicts off the stack
+        [x-param-dict (hash-copy (car x-dict-stack))]
+        [y-param-dict (hash-copy (car y-dict-stack))]
 
-
-(define (rename-args x y) ; input x & y are lambdas, output x & y are lamdas with parameters following naming convention
-  (let* (
-        [param-dicts (create-param-dict (cadr x) (cadr y))]
-        [x-param-dict (car param-dicts)]
-        [y-param-dict (cadr param-dicts)]
-        [x-params (replace-args (cadr x) x-param-dict)] 
-        [y-params (replace-args (cadr y) y-param-dict)] 
-        [x-body (replace-args (caddr x) x-param-dict)]
-        [y-body (replace-args (caddr y) y-param-dict)]
-        [processed-x (list (car x) x-params x-body)]
-        [processed-y  (list (car y) y-params y-body)]
-        )
-    (list processed-x processed-y)))
-
-(define (replace-args expr dict)
-  (if (list? expr)
-      (map (lambda (x) (replace-args x dict)) expr)
-      (hash-ref dict expr expr)
-      ))
-
-(define (create-param-dict x-params y-params)
-  (let* ([x-param-dict (make-hash)]
-        [y-param-dict (make-hash)]
+        ; mapping function
         [handle-params
          (lambda (a b)
            (let ([new-param (string->symbol (string-append (symbol->string a) "!" (symbol->string b)))])
-             (if
-              (eqv? a b)
+             (if (eqv? a b)
               (and (hash-set! x-param-dict a a) (hash-set! y-param-dict b b))
-              (and (hash-set! x-param-dict a new-param) (hash-set! y-param-dict b new-param))
-             )))])
+              (and (hash-set! x-param-dict a new-param) (hash-set! y-param-dict b new-param)))))])
+
+    ; push param dicts onto the stack
     (map handle-params x-params y-params)
-    `(,x-param-dict ,y-param-dict)
-    ))
 
+    ; update stacks of dicts
+    (set! x-dict-stack (cons x-param-dict x-dict-stack))
+    (set! y-dict-stack (cons y-param-dict y-dict-stack))))
 
+(define (rename-args expr dict)
+  (if (list? expr)
+      (map (lambda (x) (rename-args x dict)) expr)
+      (hash-ref dict expr expr)))
 
-  
-;(expr-compare '((lambda (a) a) c) '((lambda (b) b) d))
+(define (test-expr-compare x y) 
+  (and (eqv? (eval x) (eval `(let ([% #t]) ,(expr-compare x y))))
+       (eqv? (eval y) (eval `(let ([% #f]) ,(expr-compare x y))))))
