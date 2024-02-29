@@ -1,5 +1,0 @@
-(executable
- (public_name hw2)
- (name main)
- (libraries hw2)
- (flags :standard -w -32-37 ))
