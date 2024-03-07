@@ -91,3 +91,9 @@ hello
 world
 finished at 17:14:34
 ```
+
+asyncio.run(main()) is the top-level entry point for an asyncio program. This call blocks until the main coroutine (and thus the server running within it) is complete.
+
+# Problems Encountered
+
+## Starting a server
