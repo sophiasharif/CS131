@@ -1,17 +1,10 @@
 Initialized server Campbell on port 10002
-[handle_client] RECEIVED MESSAGE: 'UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'
-[handle_UPDATE] RECEIVED an update:  UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
+[handle_client] RECEIVED MESSAGE from 63569 with IP 127.0.0.1: 'UPDATE Jaquez kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503 10002;10003;10004 10004'
+[handle_UPDATE] RECEIVED an update from 10004:  UPDATE Jaquez kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503 10002;10003;10004 10004
 [handle_UPDATE] UPDATING other servers
+    message: UPDATE Jaquez kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503 10000;10001;10002;10003;10004 10002
+    [handle_UPDATE] Sending update to 10000
+[send_message_to_server] Sending to 10000: UPDATE Jaquez kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503 10000;10001;10002;10003;10004 10002
     [handle_UPDATE] Sending update to 10001
-[handle_client] RECEIVED MESSAGE: 'UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'
-[handle_UPDATE] RECEIVED an update:  UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
-[handle_UPDATE] Location already updated, returning kiwi.cs.ucla.edu
-[handle_client] LOCATION UPDATE for kiwi.cs.ucla.edu
-[send_message_to_server] Sending to 10001: UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
-    [handle_UPDATE] Sending update to 10004
-[send_message_to_server] Sending to 10004: UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
-[handle_client] LOCATION UPDATE for kiwi.cs.ucla.edu
-[handle_client] RECEIVED MESSAGE: 'UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'
-[handle_UPDATE] RECEIVED an update:  UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
-[handle_UPDATE] Location already updated, returning kiwi.cs.ucla.edu
+[send_message_to_server] Sending to 10001: UPDATE Jaquez kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503 10000;10001;10002;10003;10004 10002
 [handle_client] LOCATION UPDATE for kiwi.cs.ucla.edu

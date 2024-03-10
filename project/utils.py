@@ -21,6 +21,12 @@ def get_buddy_ports(port):
         10004: [10002, 10003]
     }[port]
 
+def serialize_ports(ports):
+    unique_ports =list(set(ports))
+    return ';'.join([str(port) for port in unique_ports])
+
+def deserialize_ports(ports):
+    return [int(port) for port in ports.split(';')]
 
 async def fetch(url):
     async with aiohttp.ClientSession() as session:  # Create a session.

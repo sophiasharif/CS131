@@ -1,13 +1,7 @@
 Initialized server Jaquez on port 10004
-[handle_client] RECEIVED MESSAGE: 'UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'
-[handle_UPDATE] RECEIVED an update:  UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
-[handle_UPDATE] UPDATING other servers
-    [handle_UPDATE] Sending update to 10002
-[handle_client] RECEIVED MESSAGE: 'UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'
-[handle_UPDATE] RECEIVED an update:  UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
-[handle_UPDATE] Location already updated, returning kiwi.cs.ucla.edu
-[handle_client] LOCATION UPDATE for kiwi.cs.ucla.edu
-[send_message_to_server] Sending to 10002: UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
-    [handle_UPDATE] Sending update to 10003
-[send_message_to_server] Sending to 10003: UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
-[handle_client] LOCATION UPDATE for kiwi.cs.ucla.edu
+[handle_client] RECEIVED MESSAGE from 63568 with IP 127.0.0.1: 'IAMAT kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503\r\n'
+[handle_IAMAT] LOCATION UPDATE for kiwi.cs.ucla.edu: Location(Jaquez, +34.068930-118.445127, 1621464827.959498503)
+[handle_IAMAT] UPDATING OTHER SERVERS
+[send_message_to_server] Sending to 10002: UPDATE Jaquez kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503 10002;10003;10004 10004
+[send_message_to_server] Sending to 10003: UPDATE Jaquez kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503 10002;10003;10004 10004
+[handle_client] SEND: 'AT Jaquez 88644641.56763172 kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'

@@ -35,9 +35,10 @@ class Server:
     async def handle_client(self, reader, writer):
 
         # read message from client
-        data = await reader.read(100) # read up to 100 bytes
+        data = await reader.read(1000) # read up to 100 bytes
         message = data.decode() # decode from bytes to string (utf-8 by default)
-        print(f"[handle_client] RECEIVED MESSAGE: {message!r}", flush=True)
+        client_ip, client_port = writer.get_extra_info('peername')
+        print(f"[handle_client] RECEIVED MESSAGE from {client_port} with IP {client_ip}: {message!r}", flush=True)
 
         # handle message
         response = f"? {message}"
@@ -57,6 +58,9 @@ class Server:
         writer.write(response.encode())
         await writer.drain()
 
+        # close the connection
+        writer.close()
+
 
     async def handle_IAMAT(self, message):
         try:
@@ -69,7 +73,7 @@ class Server:
 
             # propagate message to other servers
             print('[handle_IAMAT] UPDATING OTHER SERVERS', flush=True)
-            update_message = f'UPDATE {self.name} {client_id} {location} {timestamp}'
+            update_message = f'UPDATE {self.name} {client_id} {location} {timestamp} {serialize_ports(get_buddy_ports(self.port) + [self.port])} {self.port}'
             for port in get_buddy_ports(self.port):
                 await self.send_message_to_server(port, update_message)
 
@@ -98,9 +102,10 @@ class Server:
     
     async def handle_UPDATE(self, message):
         try:
-            print(f'[handle_UPDATE] RECEIVED an update: ', message, flush=True)
-            _, server, client_id, location, timestamp = message.split()
-            sender_port = get_port(server)
+            _, server, client_id, location, timestamp, updated_ports_seriralized, source_port = message.split()
+            updated_ports = deserialize_ports(updated_ports_seriralized)
+            print(f'[handle_UPDATE] RECEIVED an update from {source_port}: ', message, flush=True)
+
 
             # don't do anything if already updated
             if client_id in self.client_locations and float(self.client_locations[client_id].timestamp) >= float(timestamp):
@@ -113,14 +118,17 @@ class Server:
             
             # dispatch message to other servers
             print(f'[handle_UPDATE] UPDATING other servers', flush=True)
-            for buddy_port in get_buddy_ports(self.port):
-                if buddy_port == sender_port:
+            buddy_ports = get_buddy_ports(self.port)
+            new_message = f'UPDATE {server} {client_id} {location} {timestamp} {serialize_ports(updated_ports + buddy_ports + [self.port])} {self.port}'
+            print(f'    message: {new_message}', flush=True)
+            for buddy_port in buddy_ports:
+                if buddy_port in updated_ports: # don't send duplicate messages
                     continue
                 print(f'    [handle_UPDATE] Sending update to {buddy_port}', flush=True)
-                await self.send_message_to_server(buddy_port, message)
+                await self.send_message_to_server(buddy_port, new_message)
             
         except Exception as e:
-            print(f"Exception in handle_WHATSAT: {e}", flush=True)
+            print(f"Exception in handle_UPDATE: {e}", flush=True)
             return f'? {message}'
         
 
@@ -128,6 +136,7 @@ class Server:
         try:
             reader, writer = await asyncio.open_connection(port=port, family=socket.AF_INET)
             print(f'[send_message_to_server] Sending to {port}: {message}', flush=True)
+
             writer.write(message.encode())
             await writer.drain()  # Ensure the message is sent
             writer.close()  # Close the connection

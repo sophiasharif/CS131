@@ -79,6 +79,25 @@ There are some minor differences. Node.js presents the event loop as a runtime i
 
 I was unfamiliar with the process of starting a server in asyncio. I had to learn how to use the `asyncio.start_server` function to create a server that listens for incoming connections. This function returns a `Server` object that can be used to accept incoming connections and handle them asynchronously.
 
+### Debugging
+
+Debugging was more difficult for this project than other projects we have worked on in this class. It was often difficult to trace the source of errors because there were 5 different points of execution, and I had to comb through logs to find the source of the error. 
+
+One bug I encountered often was missing an await keyword. At first, I didn't catch these sorts of bugs because I wrapped my code in try/except blocks but didn't log the exception in depth. I learned from this by adding more detailed exception handling to my code, including the name of the function and the message of the exception.
+
+One particularly difficult bug I encountered was when I noticed that some of my servers were receiving messages from server 10 according to my serialized path of ports. I was really confused where this was sourcing from because there was no server on port 10. After a lot of debugging, I noticed that all the messages were capped at 100 characters long. At this point, I realized that I was only reading 100 characters to the buffer at a time, and I was missing the rest of the message. I fixed this by reading the entire message to the buffer at once.
+
+### Closing Connections
+
+Another particularly frustrating bug I encountered was getting 3/60 on the autograder because I wasn't closing the connection with the client after receiving a message from them. I spent hours debugging this issue and couldn't figure out what was wrong. This was a one-line fix -- I just had to add `writer.close` after sending a message to the client. 
+
+### Testing
+
+Testing was difficult because I had to test the entire system at once. I couldn't test the servers in isolation because they relied on each other to function. This made it difficult to isolate the source of errors. I had to rely on logs to trace the source.
+
+It was also frustrating to have to restart every single server every time I made a change to the code. This made the development process slow and tedious. I would have liked to have a way to restart the servers without having to manually stop and start them. In the future, if I find myself in a similar situation, I might try to write a shell script to start the 5 server for me and send a test message to them.
+
+
 ## Recommendation
 
 Asyncio is highly suitable for creating a proxy server herd architecture, particularly for scenarios involving high I/O operations like the proposed proxy herd for the Google Places API. Its efficient handling of concurrent connections, ease of use due to the `async`/`await` syntax, and the improved features in Python 3.9 and later versions significantly outweigh the complexities involved in earlier versions. Although Python's dynamic typing and memory management approach, as well as the Global Interpreter Lock (GIL), present challenges in comparison to Java, these do not detract from asyncio's appropriateness for this application. The event-driven model employed by asyncio is akin to that of Node.js, offering similar benefits in terms of performance and scalability for I/O-bound tasks. Given these considerations, we recommend adopting asyncio for developing the application server herd, with a suggestion to leverage the latest Python features for optimal performance and maintainability. This choice is predicated on the project's I/O-bound nature and the necessity for rapid, efficient processing of network requests, where asyncio's event loop and coroutine model excel.
