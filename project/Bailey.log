@@ -1,0 +1,7 @@
+Initialized server Bailey on port 10000
+[handle_client] RECEIVED MESSAGE: 'IAMAT kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503\r\n'
+[handle_IAMAT] LOCATION UPDATE for kiwi.cs.ucla.edu: Location(Bailey, +34.068930-118.445127, 1621464827.959498503)
+[handle_IAMAT] UPDATING OTHER SERVERS
+[send_message_to_server] Sending to 10001: UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
+[send_message_to_server] Sending to 10002: UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
+[handle_client] SEND: 'AT Bailey 88637234.53146768 kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'

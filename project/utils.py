@@ -1,4 +1,6 @@
+import json
 import aiohttp
+
 API_KEY = "AIzaSyA83pvRMs3tb_6pz6xm9aoj7wTBFJ04oU0"
 
 def get_port(name):
@@ -10,6 +12,15 @@ def get_port(name):
         'Jaquez': 10004
     }[name]
 
+def get_buddy_ports(port):
+    return {
+        10000: [10001, 10002],
+        10001: [10000, 10002, 10003],
+        10002: [10000, 10001, 10004],
+        10003: [10001, 10004],
+        10004: [10002, 10003]
+    }[port]
+
 
 async def fetch(url):
     async with aiohttp.ClientSession() as session:  # Create a session.
@@ -19,10 +30,13 @@ async def fetch(url):
 
 async def get_places(location, radius, limit):
     lat, long = separate_lat_long(location)
-    radius_in_m = int(radius) * 1000
-    command = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{long}&radius={radius_in_m}&type=restaurant&key={API_KEY}"      
-    # TODO : add limit manually
-    return await fetch(command)
+    radius_in_m = min(int(radius) * 1000, 50000) # limit to 50km
+    limit = min(int(limit), 20) # limit to 20 results
+    command = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{long}&radius={radius_in_m}&key={API_KEY}"      
+    response = await fetch(command)
+    response = json.loads(response)
+    response['results'] = response['results'][:int(limit)]
+    return json.dumps(response, indent=4)
 
 
 def separate_lat_long(iso6709):
@@ -37,6 +51,10 @@ def separate_lat_long(iso6709):
         if iso6709[i] in '+-':
             lat = iso6709[:i]
             long = iso6709[i:]
+            if lat[0] == '+':
+                lat = lat[1:]
+            if long[0] == '+':
+                long = long[1:]
             return lat, long
     
     raise ValueError("Invalid ISO 6709 format")

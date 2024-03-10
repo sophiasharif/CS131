@@ -1,0 +1,17 @@
+Initialized server Bona on port 10001
+[handle_client] RECEIVED MESSAGE: 'UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'
+[handle_UPDATE] RECEIVED an update:  UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
+[handle_UPDATE] UPDATING other servers
+    [handle_UPDATE] Sending update to 10002
+[send_message_to_server] Sending to 10002: UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
+    [handle_UPDATE] Sending update to 10003
+[send_message_to_server] Sending to 10003: UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
+[handle_client] LOCATION UPDATE for kiwi.cs.ucla.edu
+[handle_client] RECEIVED MESSAGE: 'UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'
+[handle_UPDATE] RECEIVED an update:  UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
+[handle_UPDATE] Location already updated, returning kiwi.cs.ucla.edu
+[handle_client] LOCATION UPDATE for kiwi.cs.ucla.edu
+[handle_client] RECEIVED MESSAGE: 'UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503'
+[handle_UPDATE] RECEIVED an update:  UPDATE Bailey kiwi.cs.ucla.edu +34.068930-118.445127 1621464827.959498503
+[handle_UPDATE] Location already updated, returning kiwi.cs.ucla.edu
+[handle_client] LOCATION UPDATE for kiwi.cs.ucla.edu
